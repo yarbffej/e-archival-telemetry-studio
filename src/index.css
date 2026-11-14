@@ -1,0 +1,304 @@
+@import "tailwindcss";
+
+:root {
+  --ui-middle-bg: #FFFFFF;
+  --ui-middle-image: radial-gradient(rgba(18, 18, 18, 0.06) 1.2px, transparent 1.2px);
+  --ui-middle-size: 18px 18px;
+  --ui-surface: #FFFDF7;
+  --ui-elevated: #FFFFFF;
+  --ui-tile-1: #FFF9C4;
+  --ui-tile-2: #FFE4F0;
+  --ui-tile-3: #E0F7FA;
+  --ui-tile-4: #ECFCCB;
+  --ui-input-bg: #FFFFFF;
+  --ui-ink: #121212;
+  --ui-muted: #525252;
+  --ui-border: #121212;
+  --ui-shadow: #121212;
+  --ui-subshadow: #121212;
+  --ui-glow: rgba(18, 18, 18, 0.12);
+  --ui-scroll-track: #FFFBF0;
+  --ui-scroll-thumb: #FF2A85;
+}
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', 'Space Grotesk', sans-serif;
+    background-color: #FFFBF0;
+    color: var(--ui-ink, #121212);
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(255, 230, 0, 0.24) 0%, transparent 34%),
+      radial-gradient(circle at 88% 12%, rgba(255, 42, 133, 0.16) 0%, transparent 32%),
+      radial-gradient(circle at 82% 78%, rgba(0, 229, 255, 0.20) 0%, transparent 36%),
+      radial-gradient(circle at 18% 85%, rgba(184, 255, 0, 0.22) 0%, transparent 34%),
+      radial-gradient(#12121222 1.25px, transparent 1.25px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 22px 22px;
+    background-attachment: fixed;
+    transition: background-color 0.35s ease;
+  }
+}
+
+.font-display {
+  font-family: 'Bricolage Grotesque', 'Syne', 'Space Grotesk', sans-serif;
+}
+
+.font-tactical {
+  font-family: 'Bricolage Grotesque', 'Space Grotesk', sans-serif;
+}
+
+.font-mono-zine {
+  font-family: 'Space Mono', monospace;
+}
+
+/* Studio Theme Surface Helpers */
+.theme-middle {
+  background-color: var(--ui-middle-bg, #FFFFFF);
+  background-image: var(--ui-middle-image, none);
+  background-size: var(--ui-middle-size, auto);
+  color: var(--ui-ink, #121212);
+  transition: background-color 0.28s ease, color 0.22s ease, border-color 0.22s ease;
+}
+
+.theme-surface {
+  background-color: var(--ui-surface, #FFFDF7);
+  color: var(--ui-ink, #121212);
+  transition: background-color 0.25s ease, color 0.22s ease, border-color 0.22s ease;
+}
+
+.theme-elevated {
+  background-color: var(--ui-elevated, #FFFFFF);
+  color: var(--ui-ink, #121212);
+  transition: background-color 0.25s ease, color 0.22s ease, border-color 0.22s ease;
+}
+
+.theme-tile-1 {
+  background-color: var(--ui-tile-1, #FFF9C4);
+  color: var(--ui-ink, #121212);
+  transition: background-color 0.25s ease, color 0.22s ease, border-color 0.22s ease;
+}
+
+.theme-tile-2 {
+  background-color: var(--ui-tile-2, #FFE4F0);
+  color: var(--ui-ink, #121212);
+  transition: background-color 0.25s ease, color 0.22s ease, border-color 0.22s ease;
+}
+
+.theme-tile-3 {
+  background-color: var(--ui-tile-3, #E0F7FA);
+  color: var(--ui-ink, #121212);
+  transition: background-color 0.25s ease, color 0.22s ease, border-color 0.22s ease;
+}
+
+.theme-tile-4 {
+  background-color: var(--ui-tile-4, #ECFCCB);
+  color: var(--ui-ink, #121212);
+  transition: background-color 0.25s ease, color 0.22s ease, border-color 0.22s ease;
+}
+
+.theme-input {
+  background-color: var(--ui-input-bg, #FFFFFF);
+  color: var(--ui-ink, #121212);
+  border-color: var(--ui-border, #121212);
+  transition: background-color 0.25s ease, color 0.22s ease, border-color 0.22s ease;
+}
+
+.theme-input::placeholder {
+  color: var(--ui-muted, #525252);
+  opacity: 0.72;
+}
+
+select.theme-input option {
+  background-color: var(--ui-input-bg, #FFFFFF);
+  color: var(--ui-ink, #121212);
+}
+
+.theme-muted {
+  color: var(--ui-muted, #525252);
+}
+
+.theme-border {
+  border-color: var(--ui-border, #121212);
+}
+
+/* Neo-Pop Zine Card & Tactile Toy Button Physics */
+.pop-card {
+  border: 3px solid var(--ui-border, #121212);
+  box-shadow: 6px 6px 0px var(--ui-shadow, #121212), 0 0 28px var(--ui-glow, transparent);
+  border-radius: 20px;
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.22s ease;
+}
+
+.pop-card .pop-card {
+  border-color: var(--ui-border, #121212);
+  box-shadow: 5px 5px 0px var(--ui-subshadow, #121212);
+}
+
+.pop-card-lift:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0px var(--ui-shadow, #121212), 0 0 36px var(--ui-glow, transparent);
+}
+
+.pop-card .pop-card-lift:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 8px 8px 0px var(--ui-subshadow, #121212);
+}
+
+.pop-btn {
+  border: 2.5px solid var(--ui-border, #121212);
+  box-shadow: 4px 4px 0px var(--ui-shadow, #121212);
+  border-radius: 14px;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.12s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.pop-card .pop-btn {
+  border-color: var(--ui-border, #121212);
+  box-shadow: 4px 4px 0px var(--ui-subshadow, #121212);
+}
+
+.pop-btn:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--ui-shadow, #121212);
+}
+
+.pop-card .pop-btn:hover:not(:disabled) {
+  box-shadow: 6px 6px 0px var(--ui-subshadow, #121212);
+}
+
+.pop-btn:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px var(--ui-shadow, #121212);
+}
+
+.pop-card .pop-btn:active:not(:disabled) {
+  box-shadow: 0px 0px 0px var(--ui-subshadow, #121212);
+}
+
+/* Halftone Ben-Day Pop Pattern */
+.halftone-dots {
+  background-image: radial-gradient(rgba(18, 18, 18, 0.16) 1.5px, transparent 1.5px);
+  background-size: 10px 10px;
+}
+
+/* Translucent Washi / Masking Tape Strip */
+.washi-tape {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 230, 0, 0.88),
+    rgba(255, 230, 0, 0.88) 8px,
+    rgba(255, 255, 255, 0.82) 8px,
+    rgba(255, 255, 255, 0.82) 16px
+  );
+  border: 2px solid #121212;
+  box-shadow: 2px 2px 0px rgba(18, 18, 18, 0.35);
+}
+
+/* Kinetic Infinite Marquee */
+@keyframes zine-marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-zine-marquee {
+  display: flex;
+  width: max-content;
+  animation: zine-marquee 26s linear infinite;
+}
+
+.animate-zine-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Slow Vinyl Spin */
+@keyframes vinyl-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-vinyl-spin {
+  animation: vinyl-spin 4s linear infinite;
+}
+
+/* Rapid Gacha Wheel Spin */
+.animate-gacha-wheel {
+  animation: vinyl-spin 0.42s linear infinite;
+}
+
+/* Reel Lock-In Comic Slam */
+@keyframes reel-lock-pop {
+  0% {
+    transform: translateY(-10px) scale(0.92);
+  }
+  55% {
+    transform: translateY(3px) scale(1.06);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-reel-lock {
+  animation: reel-lock-pop 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Vertical Reel Churn Blur Effect */
+@keyframes reel-churn {
+  0% {
+    transform: translateY(-3px);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+  100% {
+    transform: translateY(-3px);
+  }
+}
+
+.animate-reel-churn {
+  animation: reel-churn 0.11s linear infinite;
+}
+
+/* Gacha Cabinet Celebrate Bounce */
+@keyframes gacha-jackpot {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.018) rotate(-0.8deg);
+  }
+  55% {
+    transform: scale(1.018) rotate(0.8deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.animate-gacha-jackpot {
+  animation: gacha-jackpot 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Custom Playful Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--ui-scroll-track, #FFFBF0);
+  border-left: 2px solid #121212;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ui-scroll-thumb, #FF2A85);
+  border: 2px solid #121212;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FFE600;
+}

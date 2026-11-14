@@ -1,0 +1,25 @@
+# Dependencies (note: no trailing slash on node_modules so symlinked node_modules is also ignored)
+node_modules
+node_modules/
+
+# Build output & TypeScript cache
+dist
+dist/
+build/
+*.tsbuildinfo
+
+# Environment & local secrets
+.env
+.env.*
+!.env.example
+
+# Runtime Drive-synced or AI-generated scratch media (keep bundled starter public/media/*)
+public/media/synced/
+public/media/generated/
+
+# macOS, Google Drive & editor metadata
+.DS_Store
+Icon?
+.vscode/
+.idea/
+*.log
