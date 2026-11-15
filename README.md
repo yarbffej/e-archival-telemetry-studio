@@ -2,6 +2,14 @@
 
 Interactive 3-step Pop-Zine & multi-theme creative telemetry studio for turning spun archival scenarios, 3-Act chronicles, AI-generated or uploaded stills/video loops, and synth tracks into interactive live web zines and self-contained `.html` downloads.
 
+## Live Mobile & Web Access
+
+- **GitHub Pages (24/7 Cloud + Mobile PWA)**: https://yarbffej.github.io/e-archival-telemetry-studio/
+- **Add to Home Screen**: Open the link on iPhone (Safari → Share → **Add to Home Screen**) or Android (Chrome → Menu → **Add to Home Screen**) to launch **ME! Zine Lab** as a standalone app.
+- **One-Click Netlify Deploy**:
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/yarbffej/e-archival-telemetry-studio)
+
 ## Features
 
 - **9 Full-Surface Studio UI Themes**: Switch seamlessly across `Pop-Zine`, `Slime`, `Mechanical`, `Gothic`, `Horror`, `Futuristic`, `Forest Crystal`, `Tokyo Rain`, and `Cosmic` — reskinning every workbench tile, input, slot reel, Zine Shelf card, 50 Story Seed card, live Zine spread, and standalone `.html` export.

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#121212"/>
+  <circle cx="64" cy="64" r="50" fill="#FFE600" stroke="#FF2A85" stroke-width="6"/>
+  <text x="64" y="76" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="900" font-size="36" fill="#121212">ME!</text>
+</svg>

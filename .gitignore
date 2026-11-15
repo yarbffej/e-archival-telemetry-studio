@@ -6,6 +6,7 @@ node_modules/
 dist
 dist/
 build/
+.netlify
 *.tsbuildinfo
 
 # Environment & local secrets
