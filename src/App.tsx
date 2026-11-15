@@ -297,12 +297,25 @@ export default function App() {
   const [selectedNodeFilter, setSelectedNodeFilter] =
     useState<NodeFilterId>('ALL')
 
-  // Mobile / Hosted Zine Reader Mode Detection
-  const forceStudioParam = useMemo(() => {
+  // Mobile Phone vs Desktop Studio Mode Detection
+  // Desktop browsers (>= 768px) always open the full Zine Maker Studio;
+  // Phones (< 768px or mobile phone user-agents) automatically open the Pocket Zine Reader.
+  const { forceStudioParam, forceReaderParam, isPhoneUserAgent } = useMemo(() => {
     try {
-      return new URLSearchParams(window.location.search).get('studio') === '1'
+      const params = new URLSearchParams(window.location.search)
+      const ua = navigator.userAgent || ''
+      return {
+        forceStudioParam: params.get('studio') === '1',
+        forceReaderParam: params.get('reader') === '1',
+        isPhoneUserAgent:
+          /iPhone|iPod|Android.+Mobile|Windows Phone|webOS|BlackBerry/i.test(ua),
+      }
     } catch {
-      return false
+      return {
+        forceStudioParam: false,
+        forceReaderParam: false,
+        isPhoneUserAgent: false,
+      }
     }
   }, [])
   const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() =>
@@ -322,10 +335,10 @@ export default function App() {
     return () => mq.removeEventListener('change', onChange)
   }, [])
 
-  const isReaderMode =
-    (!IS_LOCAL_STUDIO && !forceStudioParam) ||
-    isMobileViewport ||
-    previewReaderMode
+  const isMobileDevice = isMobileViewport || isPhoneUserAgent
+  const isReaderMode = forceStudioParam
+    ? false
+    : isMobileDevice || forceReaderParam || previewReaderMode
 
   // Studio UI Background Theme Engine (Pop-Zine, Slime, Mechanical, Gothic, Horror, Futuristic, Forest Crystal, etc.)
   const [uiThemeId, setUiThemeId] = useState<UiThemeId>(() => {
@@ -1369,7 +1382,7 @@ export default function App() {
                 </span>
               </button>
 
-              {previewReaderMode && IS_LOCAL_STUDIO && !isMobileViewport && (
+              {previewReaderMode && !isMobileDevice && (
                 <button
                   type="button"
                   onClick={() => {
