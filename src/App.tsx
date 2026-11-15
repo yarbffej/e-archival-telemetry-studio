@@ -21,6 +21,13 @@ import {
   KeyRound,
   Wand2,
   Palette,
+  BookOpen,
+  Smartphone,
+  Monitor,
+  Send,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
 } from 'lucide-react'
 import {
   ArchivalTelemetrySlate,
@@ -279,12 +286,46 @@ function probeVideoOrientation(url: string): Promise<'portrait' | 'landscape'> {
   })
 }
 
+const IS_LOCAL_STUDIO = Boolean(
+  (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV
+)
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('STUDIO')
   const [wizardStep, setWizardStep] = useState<WizardStep>(1)
   const [builderCollapsed, setBuilderCollapsed] = useState(false)
   const [selectedNodeFilter, setSelectedNodeFilter] =
     useState<NodeFilterId>('ALL')
+
+  // Mobile / Hosted Zine Reader Mode Detection
+  const forceStudioParam = useMemo(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('studio') === '1'
+    } catch {
+      return false
+    }
+  }, [])
+  const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  )
+  const [previewReaderMode, setPreviewReaderMode] = useState(false)
+  const [readerScreen, setReaderScreen] = useState<'SHELF' | 'ISSUE'>('SHELF')
+  const [isSavingShelf, setIsSavingShelf] = useState(false)
+  const [isPublishingPhone, setIsPublishingPhone] = useState(false)
+  const [isRefreshingShelf, setIsRefreshingShelf] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const onChange = (e: MediaQueryListEvent) => setIsMobileViewport(e.matches)
+    setIsMobileViewport(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  const isReaderMode =
+    (!IS_LOCAL_STUDIO && !forceStudioParam) ||
+    isMobileViewport ||
+    previewReaderMode
 
   // Studio UI Background Theme Engine (Pop-Zine, Slime, Mechanical, Gothic, Horror, Futuristic, Forest Crystal, etc.)
   const [uiThemeId, setUiThemeId] = useState<UiThemeId>(() => {
@@ -395,13 +436,45 @@ export default function App() {
     isSpinning,
   ])
 
-  // Zine Shelf (Vault)
+  // Zine Shelf (Vault) — Hydrated from published ./shelf-issues.json on Desktop & Mobile Reader
   const [vaultSlates, setVaultSlates] = useState<ArchivalTelemetrySlate[]>(
     INITIAL_VAULT_SLATES
   )
   const [selectedVaultId, setSelectedVaultId] = useState<string>(
     INITIAL_VAULT_SLATES[0].id
   )
+
+  const loadPublishedShelf = async (announce = false) => {
+    setIsRefreshingShelf(true)
+    try {
+      const res = await fetch(`./shelf-issues.json?t=${Date.now()}`, {
+        cache: 'no-store',
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      if (Array.isArray(data?.slates) && data.slates.length > 0) {
+        const loaded: ArchivalTelemetrySlate[] = data.slates
+        setVaultSlates(loaded)
+        setSelectedVaultId((prevId) =>
+          loaded.some((s) => s.id === prevId) ? prevId : loaded[0].id
+        )
+        if (announce) {
+          soundEngine.triggerTuningBladeChime('normal')
+          showToast(`📚 Synced ${loaded.length} Zine Issues!`)
+        }
+      }
+    } catch {
+      if (announce) {
+        showToast('📚 Shelf is using bundled issues')
+      }
+    } finally {
+      setIsRefreshingShelf(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadPublishedShelf(false)
+  }, [])
 
   // Step 1 & 2 State (In-App Story Generator + Prompts)
   const [pastedStoryInput, setPastedStoryInput] = useState('')
@@ -946,20 +1019,188 @@ export default function App() {
     setIsSyncingDrive(false)
   }
 
-  // Save Issue to Zine Shelf
-  const handleCommitToVault = () => {
-    soundEngine.triggerTuningBladeChime('severance')
-    setVaultSlates((prev) => {
-      const existsIdx = prev.findIndex((s) => s.id === activeSlate.id)
-      if (existsIdx >= 0) {
-        const copy = [...prev]
-        copy[existsIdx] = activeSlate
-        return copy
+  const resolveMediaExtFromMime = (mime: string, fallback = 'bin') => {
+    const m = mime.toLowerCase()
+    if (m.includes('png')) return 'png'
+    if (m.includes('webp')) return 'webp'
+    if (m.includes('gif')) return 'gif'
+    if (m.includes('jpeg') || m.includes('jpg')) return 'jpg'
+    if (m.includes('webm')) return 'webm'
+    if (m.includes('mp4') && m.includes('video')) return 'mp4'
+    if (m.includes('mp4') || m.includes('m4a')) return 'm4a'
+    if (m.includes('wav')) return 'wav'
+    if (m.includes('mpeg') || m.includes('mp3') || m.includes('audio')) return 'mp3'
+    if (m.includes('video')) return 'mp4'
+    return fallback
+  }
+
+  const uploadBlobMediaIfNeeded = async (
+    rawUrl: string | undefined,
+    slateId: string,
+    slot: string
+  ): Promise<string | undefined> => {
+    if (!rawUrl || !rawUrl.startsWith('blob:') || !IS_LOCAL_STUDIO) {
+      return rawUrl
+    }
+    try {
+      const hashIdx = rawUrl.indexOf('#')
+      const hash = hashIdx >= 0 ? rawUrl.slice(hashIdx) : ''
+      const blobHref = hashIdx >= 0 ? rawUrl.slice(0, hashIdx) : rawUrl
+      const blobRes = await fetch(blobHref)
+      const blob = await blobRes.blob()
+      const ext = resolveMediaExtFromMime(
+        blob.type || '',
+        hash === '#video' ? 'mp4' : 'jpg'
+      )
+      const upRes = await fetch(
+        `/api/upload-zine-media?slateId=${encodeURIComponent(
+          slateId
+        )}&slot=${encodeURIComponent(slot)}&ext=${encodeURIComponent(ext)}`,
+        {
+          method: 'POST',
+          body: blob,
+        }
+      )
+      if (!upRes.ok) return rawUrl
+      const upData = await upRes.json()
+      return upData?.url ? `${upData.url}${hash}` : rawUrl
+    } catch {
+      return rawUrl
+    }
+  }
+
+  const persistSlatesToDisk = async (
+    slatesToPersist: ArchivalTelemetrySlate[]
+  ): Promise<ArchivalTelemetrySlate[]> => {
+    if (!IS_LOCAL_STUDIO) return slatesToPersist
+    setIsSavingShelf(true)
+    try {
+      const uploadedSlates = await Promise.all(
+        slatesToPersist.map(async (slate) => {
+          const gallery = slate.galleryUrls
+            ? ((await Promise.all(
+                slate.galleryUrls.map((u, idx) =>
+                  uploadBlobMediaIfNeeded(u, slate.id, `shot${idx + 1}`)
+                )
+              )) as string[])
+            : undefined
+          const still =
+            gallery && gallery.length > 0
+              ? gallery[0]
+              : (await uploadBlobMediaIfNeeded(slate.stillUrl, slate.id, 'cover')) ||
+                slate.stillUrl
+          const gifUrl = await uploadBlobMediaIfNeeded(
+            slate.gifUrl,
+            slate.id,
+            'loop'
+          )
+          const videoUrl = await uploadBlobMediaIfNeeded(
+            slate.videoUrl,
+            slate.id,
+            'cinema'
+          )
+          const audioUrl = await uploadBlobMediaIfNeeded(
+            slate.audioUrl,
+            slate.id,
+            'song'
+          )
+          return {
+            ...slate,
+            stillUrl: still,
+            galleryUrls: gallery,
+            gifUrl,
+            videoUrl,
+            audioUrl,
+          }
+        })
+      )
+
+      const res = await fetch('/api/shelf-save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slates: uploadedSlates }),
+      })
+      if (!res.ok) return uploadedSlates
+      const data = await res.json()
+      if (Array.isArray(data?.slates)) {
+        const saved: ArchivalTelemetrySlate[] = data.slates
+        setVaultSlates(saved)
+        const matchingActive = saved.find((s) => s.id === activeSlate.id)
+        if (matchingActive) {
+          setActiveSlate(matchingActive)
+        }
+        return saved
       }
-      return [activeSlate, ...prev]
-    })
+      return uploadedSlates
+    } catch {
+      return slatesToPersist
+    } finally {
+      setIsSavingShelf(false)
+    }
+  }
+
+  // Save Issue to Zine Shelf (and persist locally for Mobile Reader)
+  const handleCommitToVault = async () => {
+    soundEngine.triggerTuningBladeChime('severance')
+    const existsIdx = vaultSlates.findIndex((s) => s.id === activeSlate.id)
+    const nextSlates =
+      existsIdx >= 0
+        ? vaultSlates.map((s, idx) => (idx === existsIdx ? activeSlate : s))
+        : [activeSlate, ...vaultSlates]
+    setVaultSlates(nextSlates)
     setSelectedVaultId(activeSlate.id)
     showToast(`🎉 Saved "${activeSlate.title}" to Your Zine Shelf!`)
+    await persistSlatesToDisk(nextSlates)
+  }
+
+  // Save Shelf + Push to GitHub Pages so Mobile Reader gets the zines
+  const handlePublishToPhone = async (includeActiveDraft = false) => {
+    if (isPublishingPhone || !IS_LOCAL_STUDIO) return
+    soundEngine.triggerTuningBladeChime('severance')
+    setIsPublishingPhone(true)
+    try {
+      let targetSlates = vaultSlates
+      if (includeActiveDraft) {
+        const existsIdx = vaultSlates.findIndex((s) => s.id === activeSlate.id)
+        targetSlates =
+          existsIdx >= 0
+            ? vaultSlates.map((s, idx) => (idx === existsIdx ? activeSlate : s))
+            : [activeSlate, ...vaultSlates]
+        setVaultSlates(targetSlates)
+        setSelectedVaultId(activeSlate.id)
+      }
+      showToast('📲 Saving media & pushing Zine Shelf to your phone...')
+      await persistSlatesToDisk(targetSlates)
+      const pubRes = await fetch('/api/shelf-publish', { method: 'POST' })
+      const pubData = await pubRes.json()
+      if (!pubRes.ok) {
+        throw new Error(pubData?.error || 'Failed to push to GitHub')
+      }
+      soundEngine.triggerTuningBladeChime('severance')
+      showToast(
+        pubData?.message || '📲 Published! Live on your phone in ~45s!'
+      )
+    } catch (err: any) {
+      soundEngine.triggerGlitchStutter()
+      showToast(`⚠️ Publish failed: ${err?.message || 'Check Git connection'}`)
+    } finally {
+      setIsPublishingPhone(false)
+    }
+  }
+
+  const activeReaderIndex = useMemo(() => {
+    const idx = vaultSlates.findIndex((s) => s.id === selectedVaultSlate?.id)
+    return idx >= 0 ? idx : 0
+  }, [vaultSlates, selectedVaultSlate?.id])
+
+  const handleStepReaderIssue = (delta: -1 | 1) => {
+    if (vaultSlates.length === 0) return
+    soundEngine.triggerTactileBlip(delta > 0 ? 860 : 740)
+    const nextIdx =
+      (activeReaderIndex + delta + vaultSlates.length) % vaultSlates.length
+    setSelectedVaultId(vaultSlates[nextIdx].id)
+    setReaderScreen('ISSUE')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // Export Standalone Self-Contained .HTML Zine
@@ -996,12 +1237,14 @@ export default function App() {
       >
         <div className="animate-zine-marquee font-mono-zine text-[11px] font-bold uppercase tracking-widest">
           <span className="mx-6">
-            ★ MUTABLE ECHO POP-ZINE PLAYGROUND ★ SPIN AN IDEA ★ GRAB 4 DISTINCT
-            SHOT PROMPTS ★ DROP ALL 7 FILES ★ EXPORT STANDALONE .HTML ZINE ★
+            {isReaderMode
+              ? '★ MUTABLE ECHO POCKET ZINE READER ★ TAP ANY ISSUE COVER TO READ ★ 1080P CINEMA • VINYL SONG • 2K POLAROIDS ★'
+              : '★ MUTABLE ECHO POP-ZINE PLAYGROUND ★ SPIN AN IDEA ★ GRAB 4 DISTINCT SHOT PROMPTS ★ DROP ALL 7 FILES ★ PUBLISH TO PHONE ★'}
           </span>
           <span className="mx-6">
-            ★ MUTABLE ECHO POP-ZINE PLAYGROUND ★ SPIN AN IDEA ★ GRAB 4 DISTINCT
-            SHOT PROMPTS ★ DROP ALL 7 FILES ★ EXPORT STANDALONE .HTML ZINE ★
+            {isReaderMode
+              ? '★ MUTABLE ECHO POCKET ZINE READER ★ TAP ANY ISSUE COVER TO READ ★ 1080P CINEMA • VINYL SONG • 2K POLAROIDS ★'
+              : '★ MUTABLE ECHO POP-ZINE PLAYGROUND ★ SPIN AN IDEA ★ GRAB 4 DISTINCT SHOT PROMPTS ★ DROP ALL 7 FILES ★ PUBLISH TO PHONE ★'}
           </span>
         </div>
       </div>
@@ -1013,11 +1256,21 @@ export default function App() {
           color: activeUiTheme.headerInk,
           borderColor: activeUiTheme.headerBorder,
         }}
-        className="sticky top-0 z-40 backdrop-blur-md border-b-[3px] px-4 sm:px-6 py-3 transition-colors duration-300"
+        className="sticky top-0 z-40 backdrop-blur-md border-b-[3px] px-3.5 sm:px-6 py-2.5 sm:py-3 transition-colors duration-300"
       >
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
           {/* Comic Sticker Logo */}
-          <div className="flex items-center gap-3">
+          <div
+            onClick={() => {
+              if (isReaderMode) {
+                soundEngine.triggerTactileBlip(780)
+                setReaderScreen('SHELF')
+              }
+            }}
+            className={`flex items-center gap-2.5 sm:gap-3 ${
+              isReaderMode ? 'cursor-pointer' : ''
+            }`}
+          >
             <div
               style={{
                 backgroundColor: activeUiTheme.logoBg,
@@ -1025,116 +1278,230 @@ export default function App() {
                 borderColor: activeUiTheme.borderColor,
                 boxShadow: `4px 4px 0 ${activeUiTheme.cardShadowColor}`,
               }}
-              className="w-11 h-11 rounded-2xl border-[3px] -rotate-3 flex items-center justify-center font-display font-extrabold text-xl transition-colors duration-300"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl border-[3px] -rotate-3 flex items-center justify-center font-display font-extrabold text-lg sm:text-xl transition-colors duration-300 shrink-0"
             >
               ME!
             </div>
             <div>
-              <span className="font-display text-xl sm:text-2xl font-extrabold tracking-tight uppercase block leading-none">
-                MUTABLE ECHO ZINE LAB
+              <span className="font-display text-lg sm:text-2xl font-extrabold tracking-tight uppercase block leading-none">
+                {isReaderMode ? 'MUTABLE ECHO ZINES' : 'MUTABLE ECHO ZINE LAB'}
               </span>
               <span
                 style={{ color: activeUiTheme.headerSub }}
-                className="font-mono-zine text-[11px] font-bold"
+                className="font-mono-zine text-[10px] sm:text-[11px] font-bold"
               >
-                EXPERIMENTAL COMIC &amp; MEDIA WEB PAGE STUDIO
+                {isReaderMode
+                  ? `POCKET ZINE READER • ${vaultSlates.length} ISSUES`
+                  : 'DESKTOP ZINE BUILDER & TELEMETRY STUDIO'}
               </span>
             </div>
           </div>
 
-          {/* 3 Bouncy Candy Pill Tabs */}
-          <nav className="flex items-center gap-2.5 flex-wrap">
-            <button
-              type="button"
-              onClick={() => {
-                soundEngine.triggerTactileBlip(760)
-                setActiveTab('STUDIO')
-              }}
-              style={{
-                backgroundColor:
-                  activeTab === 'STUDIO'
-                    ? activeUiTheme.accent1
-                    : activeUiTheme.surfaceBg,
-                color:
-                  activeTab === 'STUDIO'
-                    ? activeUiTheme.accent1Ink
-                    : activeUiTheme.ink,
-              }}
-              className="pop-btn px-4 py-2 text-xs sm:text-sm font-display font-extrabold uppercase cursor-pointer"
-            >
-              🎨 1. Zine Maker
-            </button>
+          {/* Navigation Controls: Dedicated Reader Pills vs Full Desktop Builder Tabs */}
+          {isReaderMode ? (
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => {
+                  soundEngine.triggerTactileBlip(800)
+                  setReaderScreen('SHELF')
+                }}
+                style={{
+                  backgroundColor:
+                    readerScreen === 'SHELF'
+                      ? activeUiTheme.accent1
+                      : activeUiTheme.surfaceBg,
+                  color:
+                    readerScreen === 'SHELF'
+                      ? activeUiTheme.accent1Ink
+                      : activeUiTheme.ink,
+                }}
+                className="pop-btn px-3 py-1.5 text-xs font-display font-extrabold uppercase cursor-pointer flex items-center gap-1.5"
+              >
+                📚 Shelf ({vaultSlates.length})
+              </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                soundEngine.triggerTactileBlip(840)
-                setActiveTab('VAULT')
-              }}
-              style={{
-                backgroundColor:
-                  activeTab === 'VAULT'
-                    ? activeUiTheme.accent2
-                    : activeUiTheme.surfaceBg,
-                color:
-                  activeTab === 'VAULT'
-                    ? activeUiTheme.accent2Ink
-                    : activeUiTheme.ink,
-              }}
-              className="pop-btn px-4 py-2 text-xs sm:text-sm font-display font-extrabold uppercase cursor-pointer"
-            >
-              📚 2. Zine Shelf ({vaultSlates.length})
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  soundEngine.triggerTactileBlip(880)
+                  setReaderScreen('ISSUE')
+                }}
+                style={{
+                  backgroundColor:
+                    readerScreen === 'ISSUE'
+                      ? activeUiTheme.accent2
+                      : activeUiTheme.surfaceBg,
+                  color:
+                    readerScreen === 'ISSUE'
+                      ? activeUiTheme.accent2Ink
+                      : activeUiTheme.ink,
+                }}
+                className="pop-btn px-3 py-1.5 text-xs font-display font-extrabold uppercase cursor-pointer flex items-center gap-1.5"
+              >
+                <BookOpen className="w-3.5 h-3.5" /> Read Issue
+              </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                soundEngine.triggerTactileBlip(920)
-                setActiveTab('TIMELINE')
-              }}
-              style={{
-                backgroundColor:
-                  activeTab === 'TIMELINE'
-                    ? activeUiTheme.accent3
+              <button
+                type="button"
+                onClick={() => {
+                  const next = soundEngine.toggleAmbientDrone()
+                  setDroneActive(next)
+                }}
+                style={{
+                  backgroundColor: droneActive
+                    ? activeUiTheme.accent4
                     : activeUiTheme.surfaceBg,
-                color:
-                  activeTab === 'TIMELINE'
-                    ? activeUiTheme.accent3Ink
+                  color: droneActive
+                    ? activeUiTheme.accent4Ink
                     : activeUiTheme.ink,
-              }}
-              className="pop-btn px-4 py-2 text-xs sm:text-sm font-display font-extrabold uppercase cursor-pointer"
-            >
-              🎰 3. 50 Story Seeds
-            </button>
-          </nav>
+                }}
+                className="pop-btn flex items-center gap-1 px-2.5 py-1.5 text-xs font-mono-zine font-bold uppercase cursor-pointer"
+                title="Ambient Synth Toy"
+              >
+                {droneActive ? (
+                  <Volume2 className="w-3.5 h-3.5" />
+                ) : (
+                  <VolumeX className="w-3.5 h-3.5" />
+                )}
+                <span className="hidden sm:inline">
+                  {droneActive ? 'Synth On' : 'Synth'}
+                </span>
+              </button>
 
-          {/* Toy Synth Drone Button */}
-          <button
-            type="button"
-            onClick={() => {
-              const next = soundEngine.toggleAmbientDrone()
-              setDroneActive(next)
-            }}
-            style={{
-              backgroundColor: droneActive
-                ? activeUiTheme.accent4
-                : activeUiTheme.surfaceBg,
-              color: droneActive
-                ? activeUiTheme.accent4Ink
-                : activeUiTheme.ink,
-            }}
-            className="pop-btn flex items-center gap-1.5 px-3.5 py-2 text-xs font-mono-zine font-bold uppercase cursor-pointer"
-          >
-            {droneActive ? (
-              <>
-                <Volume2 className="w-4 h-4" /> Synth On ♪
-              </>
-            ) : (
-              <>
-                <VolumeX className="w-4 h-4" /> Synth Toy
-              </>
-            )}
-          </button>
+              {previewReaderMode && IS_LOCAL_STUDIO && !isMobileViewport && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.triggerTactileBlip(740)
+                    setPreviewReaderMode(false)
+                  }}
+                  style={{
+                    backgroundColor: activeUiTheme.accent3,
+                    color: activeUiTheme.accent3Ink,
+                  }}
+                  className="pop-btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-display font-extrabold uppercase cursor-pointer"
+                >
+                  <Monitor className="w-3.5 h-3.5" /> Back to Zine Maker
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* 3 Bouncy Candy Pill Tabs (Desktop Builder Only) */}
+              <nav className="flex items-center gap-2.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.triggerTactileBlip(760)
+                    setActiveTab('STUDIO')
+                  }}
+                  style={{
+                    backgroundColor:
+                      activeTab === 'STUDIO'
+                        ? activeUiTheme.accent1
+                        : activeUiTheme.surfaceBg,
+                    color:
+                      activeTab === 'STUDIO'
+                        ? activeUiTheme.accent1Ink
+                        : activeUiTheme.ink,
+                  }}
+                  className="pop-btn px-4 py-2 text-xs sm:text-sm font-display font-extrabold uppercase cursor-pointer"
+                >
+                  🎨 1. Zine Maker
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.triggerTactileBlip(840)
+                    setActiveTab('VAULT')
+                  }}
+                  style={{
+                    backgroundColor:
+                      activeTab === 'VAULT'
+                        ? activeUiTheme.accent2
+                        : activeUiTheme.surfaceBg,
+                    color:
+                      activeTab === 'VAULT'
+                        ? activeUiTheme.accent2Ink
+                        : activeUiTheme.ink,
+                  }}
+                  className="pop-btn px-4 py-2 text-xs sm:text-sm font-display font-extrabold uppercase cursor-pointer"
+                >
+                  📚 2. Zine Shelf ({vaultSlates.length})
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.triggerTactileBlip(920)
+                    setActiveTab('TIMELINE')
+                  }}
+                  style={{
+                    backgroundColor:
+                      activeTab === 'TIMELINE'
+                        ? activeUiTheme.accent3
+                        : activeUiTheme.surfaceBg,
+                    color:
+                      activeTab === 'TIMELINE'
+                        ? activeUiTheme.accent3Ink
+                        : activeUiTheme.ink,
+                  }}
+                  className="pop-btn px-4 py-2 text-xs sm:text-sm font-display font-extrabold uppercase cursor-pointer"
+                >
+                  🎰 3. 50 Story Seeds
+                </button>
+              </nav>
+
+              {/* Desktop Right Controls: Mobile Reader Preview + Toy Synth Drone */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.triggerTactileBlip(880)
+                    setReaderScreen('SHELF')
+                    setPreviewReaderMode(true)
+                  }}
+                  title="Preview how the mobile Zine Reader looks on your phone"
+                  style={{
+                    backgroundColor: activeUiTheme.surfaceBg,
+                    color: activeUiTheme.ink,
+                  }}
+                  className="pop-btn flex items-center gap-1.5 px-3 py-2 text-xs font-mono-zine font-bold uppercase cursor-pointer"
+                >
+                  <Smartphone className="w-3.5 h-3.5" /> Reader View
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = soundEngine.toggleAmbientDrone()
+                    setDroneActive(next)
+                  }}
+                  style={{
+                    backgroundColor: droneActive
+                      ? activeUiTheme.accent4
+                      : activeUiTheme.surfaceBg,
+                    color: droneActive
+                      ? activeUiTheme.accent4Ink
+                      : activeUiTheme.ink,
+                  }}
+                  className="pop-btn flex items-center gap-1.5 px-3.5 py-2 text-xs font-mono-zine font-bold uppercase cursor-pointer"
+                >
+                  {droneActive ? (
+                    <>
+                      <Volume2 className="w-4 h-4" /> Synth On ♪
+                    </>
+                  ) : (
+                    <>
+                      <VolumeX className="w-4 h-4" /> Synth Toy
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </header>
 
@@ -1153,9 +1520,13 @@ export default function App() {
       )}
 
       {/* ==================== MAIN PLAYGROUND ==================== */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* STUDIO UI BACKGROUND THEME DECK */}
-        <div className="pop-card theme-middle px-3.5 py-3 flex flex-wrap items-center justify-between gap-2.5">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 py-4 sm:py-6 space-y-5 sm:space-y-6">
+        {/* STUDIO / READER UI BACKGROUND THEME DECK */}
+        <div
+          className={`pop-card theme-middle px-3.5 py-2.5 sm:py-3 flex items-center justify-between gap-2.5 ${
+            isReaderMode ? 'overflow-x-auto' : 'flex-wrap'
+          }`}
+        >
           <div className="flex items-center gap-2 shrink-0">
             <span
               style={{
@@ -1163,16 +1534,23 @@ export default function App() {
                 color: activeUiTheme.logoText,
                 borderColor: activeUiTheme.borderColor,
               }}
-              className="px-2.5 py-1 rounded-full border-2 font-mono-zine text-[11px] font-bold uppercase flex items-center gap-1.5"
+              className="px-2.5 py-1 rounded-full border-2 font-mono-zine text-[10px] sm:text-[11px] font-bold uppercase flex items-center gap-1.5"
             >
-              <Palette className="w-3.5 h-3.5" /> Studio Backdrop
+              <Palette className="w-3.5 h-3.5" />{' '}
+              {isReaderMode ? 'Theme' : 'Studio Backdrop'}
             </span>
-            <span className="hidden xl:inline font-mono-zine text-[11px] font-bold theme-muted">
-              {activeUiTheme.tagline}
-            </span>
+            {!isReaderMode && (
+              <span className="hidden xl:inline font-mono-zine text-[11px] font-bold theme-muted">
+                {activeUiTheme.tagline}
+              </span>
+            )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div
+            className={`flex items-center gap-1.5 ${
+              isReaderMode ? 'flex-nowrap shrink-0 pr-1' : 'flex-wrap'
+            }`}
+          >
             {STUDIO_UI_THEMES.map((t) => {
               const selected = t.id === activeUiTheme.id
               return (
@@ -1193,7 +1571,7 @@ export default function App() {
                       ? `2px 2px 0 ${activeUiTheme.subShadowColor}`
                       : undefined,
                   }}
-                  className={`px-2.5 py-1 rounded-xl border-2 font-mono-zine text-[11px] font-bold uppercase flex items-center gap-1.5 cursor-pointer transition-transform ${
+                  className={`px-2.5 py-1 rounded-xl border-2 font-mono-zine text-[11px] font-bold uppercase flex items-center gap-1.5 shrink-0 cursor-pointer transition-transform ${
                     selected ? '-translate-y-0.5' : 'hover:-translate-y-0.5'
                   }`}
                 >
@@ -1218,22 +1596,268 @@ export default function App() {
             <button
               type="button"
               onClick={handleRandomUiTheme}
-              title="Roll a random studio backdrop theme"
+              title="Roll a random backdrop theme"
               style={{
                 backgroundColor: activeUiTheme.accent2,
                 color: activeUiTheme.accent2Ink,
                 borderColor: activeUiTheme.borderColor,
               }}
-              className="px-2.5 py-1 rounded-xl border-2 font-mono-zine text-[11px] font-bold uppercase flex items-center gap-1 cursor-pointer transition-transform hover:-translate-y-0.5"
+              className="px-2.5 py-1 rounded-xl border-2 font-mono-zine text-[11px] font-bold uppercase flex items-center gap-1 shrink-0 cursor-pointer transition-transform hover:-translate-y-0.5"
             >
               <Dices className="w-3.5 h-3.5" /> Mix
             </button>
           </div>
         </div>
+
+        {/* ===================================================================
+            MOBILE / HOSTED ZINE READER MODE (Read-Only Magazine Rack + Reader)
+           =================================================================== */}
+        {isReaderMode && (
+          <div className="space-y-5">
+            {readerScreen === 'SHELF' ? (
+              <div className="space-y-5">
+                {/* Pocket Zine Rack Banner */}
+                <div className="pop-card theme-tile-1 p-4 sm:p-6 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="font-display text-2xl sm:text-3xl font-extrabold uppercase leading-tight">
+                      📚 Pocket Zine Shelf ({vaultSlates.length}{' '}
+                      {vaultSlates.length === 1 ? 'Issue' : 'Issues'})
+                    </h2>
+                    <p className="text-xs sm:text-sm font-semibold theme-muted mt-0.5">
+                      Tap any zine cover to read the 3-act story, watch the cinema cut &amp; play the soundtrack!
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => void loadPublishedShelf(true)}
+                    disabled={isRefreshingShelf}
+                    style={{
+                      backgroundColor: activeUiTheme.accent3,
+                      color: activeUiTheme.accent3Ink,
+                    }}
+                    className="pop-btn px-3.5 py-2 font-display font-extrabold text-xs uppercase flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <RefreshCw
+                      className={`w-3.5 h-3.5 ${
+                        isRefreshingShelf ? 'animate-spin' : ''
+                      }`}
+                    />
+                    {isRefreshingShelf ? 'Syncing...' : 'Refresh Shelf'}
+                  </button>
+                </div>
+
+                {/* Magazine Cover Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {vaultSlates.map((slate) => {
+                    const isSelected = slate.id === selectedVaultSlate?.id
+                    const pal = getZinePalette(slate.finish)
+                    const plateCount =
+                      slate.galleryUrls && slate.galleryUrls.length > 0
+                        ? slate.galleryUrls.length
+                        : 1
+                    return (
+                      <article
+                        key={slate.id}
+                        onClick={() => {
+                          soundEngine.triggerTuningBladeChime('normal')
+                          setSelectedVaultId(slate.id)
+                          setReaderScreen('ISSUE')
+                          window.scrollTo({ top: 0, behavior: 'smooth' })
+                        }}
+                        style={{
+                          backgroundColor: isSelected
+                            ? activeUiTheme.tile1
+                            : activeUiTheme.surfaceBg,
+                          color: activeUiTheme.ink,
+                        }}
+                        className="pop-card pop-card-lift overflow-hidden cursor-pointer flex flex-col justify-between"
+                      >
+                        {/* Cover Artwork */}
+                        <div
+                          style={{ backgroundColor: activeUiTheme.marqueeBg }}
+                          className="relative h-48 sm:h-52 w-full border-b-[3px] theme-border overflow-hidden"
+                        >
+                          <img
+                            src={slate.stillUrl}
+                            alt={slate.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
+                            <span
+                              style={{
+                                backgroundColor: activeUiTheme.accent2,
+                                color: activeUiTheme.accent2Ink,
+                              }}
+                              className="px-2.5 py-0.5 rounded-full border-2 theme-border font-mono-zine text-[10px] font-bold uppercase"
+                            >
+                              {pal.emoji} ISSUE #{String(slate.phaseIndex).padStart(2, '0')}
+                            </span>
+                            {slate.videoUrl && (
+                              <span
+                                style={{
+                                  backgroundColor: activeUiTheme.accent3,
+                                  color: activeUiTheme.accent3Ink,
+                                }}
+                                className="px-2 py-0.5 rounded-full border-2 theme-border font-mono-zine text-[10px] font-bold uppercase"
+                              >
+                                🎬 1080P
+                              </span>
+                            )}
+                            {slate.audioUrl && (
+                              <span
+                                style={{
+                                  backgroundColor: activeUiTheme.accent4,
+                                  color: activeUiTheme.accent4Ink,
+                                }}
+                                className="px-2 py-0.5 rounded-full border-2 theme-border font-mono-zine text-[10px] font-bold uppercase"
+                              >
+                                🎵 SONG
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Issue Cover Copy */}
+                        <div className="p-4 flex-1 flex flex-col justify-between gap-3">
+                          <div>
+                            <div className="font-mono-zine text-[10px] font-bold uppercase theme-muted">
+                              📍 {slate.nodeTag.replace('NODE: ', '')} • {plateCount} SHOTS
+                            </div>
+                            <h3 className="font-display text-2xl font-extrabold uppercase leading-tight mt-1">
+                              {slate.title}
+                            </h3>
+                            <p className="text-xs font-semibold theme-muted line-clamp-2 mt-1.5">
+                              {slate.acts.sceneSetup}
+                            </p>
+                          </div>
+
+                          <div
+                            style={{
+                              backgroundColor: activeUiTheme.accent1,
+                              color: activeUiTheme.accent1Ink,
+                            }}
+                            className="pop-btn w-full py-2.5 px-4 font-display font-extrabold text-xs uppercase flex items-center justify-center gap-2"
+                          >
+                            <BookOpen className="w-4 h-4" /> Read Zine Issue →
+                          </div>
+                        </div>
+                      </article>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : (
+              selectedVaultSlate && (
+                <div className="space-y-4">
+                  {/* Thumb-Friendly Issue Flipper Bar */}
+                  <div className="pop-card theme-middle px-3.5 py-2.5 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundEngine.triggerTactileBlip(760)
+                        setReaderScreen('SHELF')
+                      }}
+                      className="pop-btn px-3 py-1.5 theme-surface font-display font-extrabold text-xs uppercase flex items-center gap-1 cursor-pointer"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" /> All Issues
+                    </button>
+
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleStepReaderIssue(-1)}
+                        className="pop-btn px-2.5 py-1.5 theme-surface font-mono-zine text-xs font-bold uppercase flex items-center gap-0.5 cursor-pointer"
+                        title="Previous Zine Issue"
+                      >
+                        <ChevronLeft className="w-4 h-4" /> Prev
+                      </button>
+
+                      <span
+                        style={{
+                          backgroundColor: activeUiTheme.accent2,
+                          color: activeUiTheme.accent2Ink,
+                        }}
+                        className="px-2.5 py-1 rounded-full border-2 theme-border font-mono-zine text-[10px] sm:text-xs font-bold uppercase"
+                      >
+                        {activeReaderIndex + 1} / {vaultSlates.length}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => handleStepReaderIssue(1)}
+                        className="pop-btn px-2.5 py-1.5 theme-surface font-mono-zine text-xs font-bold uppercase flex items-center gap-0.5 cursor-pointer"
+                        title="Next Zine Issue"
+                      >
+                        Next <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Full Interactive Zine Spread (Read-Only Mode) */}
+                  <LoreWebpageView
+                    slate={selectedVaultSlate}
+                    uiTheme={activeUiTheme}
+                    readerMode
+                    onUpdateSlate={(patch) => {
+                      setVaultSlates((prev) =>
+                        prev.map((item) =>
+                          item.id === selectedVaultSlate.id
+                            ? { ...item, ...patch }
+                            : item
+                        )
+                      )
+                    }}
+                  />
+
+                  {/* Bottom Comic Issue Flipper Footer */}
+                  <div className="pop-card theme-tile-1 p-3.5 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleStepReaderIssue(-1)}
+                      className="pop-btn px-3.5 py-2.5 theme-surface font-display font-extrabold text-xs uppercase flex items-center gap-1 cursor-pointer"
+                    >
+                      <ChevronLeft className="w-4 h-4" /> Prev Zine
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundEngine.triggerTactileBlip(780)
+                        setReaderScreen('SHELF')
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      style={{
+                        backgroundColor: activeUiTheme.accent1,
+                        color: activeUiTheme.accent1Ink,
+                      }}
+                      className="pop-btn px-4 py-2.5 font-display font-extrabold text-xs uppercase cursor-pointer"
+                    >
+                      📚 All {vaultSlates.length} Issues
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleStepReaderIssue(1)}
+                      style={{
+                        backgroundColor: activeUiTheme.accent2,
+                        color: activeUiTheme.accent2Ink,
+                      }}
+                      className="pop-btn px-3.5 py-2.5 font-display font-extrabold text-xs uppercase flex items-center gap-1 cursor-pointer"
+                    >
+                      Next Zine <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        )}
+
         {/* ===================================================================
             TAB 1: ZINE MAKER (3-Step Toy Workbench + Live Experimental Zine)
            =================================================================== */}
-        {activeTab === 'STUDIO' && (
+        {!isReaderMode && activeTab === 'STUDIO' && (
           <div className="space-y-9">
             {/* COLLAPSIBLE 3-STEP TOY WORKBENCH */}
             <section className="space-y-4">
@@ -2339,16 +2963,38 @@ export default function App() {
 
                               <button
                                 type="button"
-                                onClick={handleCommitToVault}
+                                onClick={() => void handleCommitToVault()}
+                                disabled={isSavingShelf}
                                 style={{
                                   backgroundColor: activeUiTheme.accent4,
                                   color: activeUiTheme.accent4Ink,
                                 }}
-                                className="pop-btn flex-1 py-3 px-5 font-display font-extrabold text-xs sm:text-sm uppercase flex items-center justify-center gap-2 cursor-pointer"
+                                className="pop-btn flex-1 py-3 px-4 font-display font-extrabold text-xs sm:text-sm uppercase flex items-center justify-center gap-2 cursor-pointer"
                               >
-                                <Archive className="w-4 h-4 stroke-[2.5]" /> 💾 Save Issue to Zine Shelf
+                                <Archive className="w-4 h-4 stroke-[2.5]" />{' '}
+                                {isSavingShelf
+                                  ? 'Saving Shelf...'
+                                  : '💾 Save to Shelf'}
                               </button>
                             </div>
+
+                            {IS_LOCAL_STUDIO && (
+                              <button
+                                type="button"
+                                onClick={() => void handlePublishToPhone(true)}
+                                disabled={isPublishingPhone || isSavingShelf}
+                                style={{
+                                  backgroundColor: activeUiTheme.accent3,
+                                  color: activeUiTheme.accent3Ink,
+                                }}
+                                className="pop-btn w-full py-3 px-5 font-display font-extrabold text-xs sm:text-sm uppercase flex items-center justify-center gap-2 cursor-pointer"
+                              >
+                                <Send className="w-4 h-4 stroke-[2.5]" />
+                                {isPublishingPhone
+                                  ? 'Pushing Zine to Your Phone...'
+                                  : '📲 Save & Publish to Phone Reader'}
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -2396,7 +3042,7 @@ export default function App() {
         {/* ===================================================================
             TAB 2: ZINE SHELF (Vibrant Magazine Issue Rack + Full Issue Viewer)
            =================================================================== */}
-        {activeTab === 'VAULT' && (
+        {!isReaderMode && activeTab === 'VAULT' && (
           <div className="space-y-9">
             <div className="pop-card theme-tile-1 p-6 flex flex-wrap items-center justify-between gap-4">
               <div>
@@ -2404,21 +3050,41 @@ export default function App() {
                   📚 Your Pop-Zine Issue Shelf ({vaultSlates.length} Issues)
                 </h2>
                 <p className="text-sm font-semibold theme-muted">
-                  Click any magazine cover below to read &amp; play the full interactive issue!
+                  Click any magazine cover below to read &amp; play, or publish your shelf straight to the Mobile Zine Reader!
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={handleBatchRoll9Slates}
-                style={{
-                  backgroundColor: activeUiTheme.accent2,
-                  color: activeUiTheme.accent2Ink,
-                }}
-                className="pop-btn px-5 py-3 font-display font-extrabold text-sm uppercase flex items-center gap-2 cursor-pointer"
-              >
-                <Dices className="w-4 h-4" /> Spin 9 Random Issues!
-              </button>
+              <div className="flex flex-wrap items-center gap-2.5">
+                {IS_LOCAL_STUDIO && (
+                  <button
+                    type="button"
+                    onClick={() => void handlePublishToPhone(false)}
+                    disabled={isPublishingPhone || isSavingShelf}
+                    style={{
+                      backgroundColor: activeUiTheme.accent3,
+                      color: activeUiTheme.accent3Ink,
+                    }}
+                    className="pop-btn px-5 py-3 font-display font-extrabold text-sm uppercase flex items-center gap-2 cursor-pointer"
+                  >
+                    <Send className="w-4 h-4" />
+                    {isPublishingPhone
+                      ? 'Publishing to Phone...'
+                      : '📲 Publish Shelf to Phone'}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleBatchRoll9Slates}
+                  style={{
+                    backgroundColor: activeUiTheme.accent2,
+                    color: activeUiTheme.accent2Ink,
+                  }}
+                  className="pop-btn px-5 py-3 font-display font-extrabold text-sm uppercase flex items-center gap-2 cursor-pointer"
+                >
+                  <Dices className="w-4 h-4" /> Spin 9 Random Issues!
+                </button>
+              </div>
             </div>
 
             {/* Colorful Magazine Rack */}
@@ -2519,7 +3185,7 @@ export default function App() {
         {/* ===================================================================
             TAB 3: 50 STORY SEEDS (Playful Colorful Seed Stickers)
            =================================================================== */}
-        {activeTab === 'TIMELINE' && (
+        {!isReaderMode && activeTab === 'TIMELINE' && (
           <div className="space-y-6">
             <div className="pop-card theme-tile-3 p-6">
               <h2 className="font-display text-3xl font-extrabold uppercase">

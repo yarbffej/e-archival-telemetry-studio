@@ -23,6 +23,7 @@ interface LoreWebpageViewProps {
   slate: ArchivalTelemetrySlate
   onUpdateSlate?: (patch: Partial<ArchivalTelemetrySlate>) => void
   uiTheme?: StudioUiTheme
+  readerMode?: boolean
 }
 
 function formatSeconds(sec: number): string {
@@ -43,6 +44,7 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
   slate,
   onUpdateSlate,
   uiTheme,
+  readerMode = false,
 }) => {
   const pal = getZinePalette(slate.finish)
   const [vibeCustomized, setVibeCustomized] = useState(false)
@@ -543,26 +545,28 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
           })}
         </div>
 
-        <button
-          type="button"
-          onClick={handleDownloadStandaloneHtml}
-          disabled={isExportingHtml}
-          className="pop-btn px-4 py-2 font-display font-extrabold text-xs sm:text-sm uppercase tracking-wide flex items-center gap-2 cursor-pointer"
-          style={{
-            backgroundColor: zTheme.popLime,
-            color: zTheme.popLimeInk,
-          }}
-        >
-          <Download className="w-4 h-4 stroke-[2.5]" />
-          {exportMsg || 'Download Standalone .HTML Zine'}
-        </button>
+        {!readerMode && (
+          <button
+            type="button"
+            onClick={handleDownloadStandaloneHtml}
+            disabled={isExportingHtml}
+            className="pop-btn px-4 py-2 font-display font-extrabold text-xs sm:text-sm uppercase tracking-wide flex items-center gap-2 cursor-pointer"
+            style={{
+              backgroundColor: zTheme.popLime,
+              color: zTheme.popLimeInk,
+            }}
+          >
+            <Download className="w-4 h-4 stroke-[2.5]" />
+            {exportMsg || 'Download Standalone .HTML Zine'}
+          </button>
+        )}
       </div>
 
       {/* ==================== MAIN ZINE PLAYGROUND CANVAS ==================== */}
-      <div className="p-5 sm:p-8 lg:p-10 space-y-10 halftone-dots">
+      <div className="p-3.5 sm:p-8 lg:p-10 space-y-8 sm:space-y-10 halftone-dots">
         {/* ==================== 2. MAGAZINE COVER MASTHEAD COLLAGE ==================== */}
         <header
-          className="relative pop-card p-6 sm:p-8 overflow-hidden"
+          className="relative pop-card p-4 sm:p-8 overflow-hidden"
           style={{ backgroundColor: zTheme.mastheadBg }}
         >
           {/* Floating decorative halftone circles */}
@@ -619,7 +623,7 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
                   ? `3px 3px 0px ${zTheme.border}`
                   : '3px 3px 0px #FFFFFF',
               }}
-              className="font-display text-4xl sm:text-6xl lg:text-7xl font-extrabold uppercase tracking-tight leading-[0.94] max-w-4xl"
+              className="font-display text-3xl sm:text-6xl lg:text-7xl font-extrabold uppercase tracking-tight leading-[0.94] max-w-4xl break-words"
             >
               {slate.title}
             </h1>

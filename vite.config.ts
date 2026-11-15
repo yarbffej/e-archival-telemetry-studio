@@ -130,7 +130,7 @@ function gdriveArchiveSyncPlugin() {
                   imgOutPath,
                 ])
               }
-              galleryUrls.push(`/media/synced/${folderId}_img${i + 1}.${ext}`)
+              galleryUrls.push(`./media/synced/${folderId}_img${i + 1}.${ext}`)
             }
             result.galleryUrls = galleryUrls
             result.stillUrl = galleryUrls[0]
@@ -148,7 +148,7 @@ function gdriveArchiveSyncPlugin() {
                 gifOutPath,
               ])
             }
-            result.gifUrl = `/media/synced/${folderId}.gif`
+            result.gifUrl = `./media/synced/${folderId}.gif`
             result.gifName = gifItem.name
           }
 
@@ -163,7 +163,7 @@ function gdriveArchiveSyncPlugin() {
                 vidOutPath,
               ])
             }
-            result.videoUrl = `/media/synced/${folderId}.mp4`
+            result.videoUrl = `./media/synced/${folderId}.mp4`
             result.videoName = videoItem.name
           }
 
@@ -179,7 +179,7 @@ function gdriveArchiveSyncPlugin() {
                 audOutPath,
               ])
             }
-            result.audioUrl = `/media/synced/${folderId}.${audExt}`
+            result.audioUrl = `./media/synced/${folderId}.${audExt}`
             result.audioName = audioItem.name
           }
 
@@ -617,11 +617,198 @@ function gdriveArchiveSyncPlugin() {
 
           res.statusCode = 200
           res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify({ done: true, url: `/media/generated/${fileName}` }))
+          res.end(JSON.stringify({ done: true, url: `./media/generated/${fileName}` }))
         } catch (err: any) {
           res.statusCode = 200
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify({ fallback: true, note: err?.message }))
+        }
+      })
+
+      // Upload raw binary media file from Desktop Studio into public/media/published/
+      server.middlewares.use('/api/upload-zine-media', async (req: any, res: any) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end('Method Not Allowed')
+          return
+        }
+        try {
+          const u = new URL(req.url || '', 'http://localhost')
+          const safeSlate = String(u.searchParams.get('slateId') || 'zine').replace(
+            /[^a-zA-Z0-9_-]/g,
+            '_'
+          )
+          const safeSlot = String(u.searchParams.get('slot') || 'media').replace(
+            /[^a-zA-Z0-9_-]/g,
+            '_'
+          )
+          const safeExt = String(u.searchParams.get('ext') || 'bin')
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '') || 'bin'
+
+          const chunks: Buffer[] = []
+          for await (const chunk of req) {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+          }
+          const buf = Buffer.concat(chunks)
+
+          const pubDir = path.resolve(process.cwd(), 'public', 'media', 'published')
+          fs.mkdirSync(pubDir, { recursive: true })
+          const fileName = `${safeSlate}_${safeSlot}_${Date.now().toString(36)}.${safeExt}`
+          fs.writeFileSync(path.join(pubDir, fileName), buf)
+
+          res.statusCode = 200
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ ok: true, url: `./media/published/${fileName}` }))
+        } catch (err: any) {
+          res.statusCode = 500
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: err?.message || 'Failed to save zine media file' }))
+        }
+      })
+
+      // Save canonical Zine Shelf manifest to public/shelf-issues.json (promoting synced/generated files to published/)
+      server.middlewares.use('/api/shelf-save', async (req: any, res: any) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end('Method Not Allowed')
+          return
+        }
+        try {
+          const chunks: Buffer[] = []
+          for await (const chunk of req) {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+          }
+          const payload = JSON.parse(Buffer.concat(chunks).toString('utf-8') || '{}')
+          const rawSlates = Array.isArray(payload.slates) ? payload.slates : []
+
+          const pubDir = path.resolve(process.cwd(), 'public', 'media', 'published')
+          const promoteUrl = (rawUrl: unknown, slateId: string, slot: string) => {
+            if (typeof rawUrl !== 'string' || !rawUrl.trim()) return rawUrl
+            const hashIdx = rawUrl.indexOf('#')
+            const hash = hashIdx >= 0 ? rawUrl.slice(hashIdx) : ''
+            let clean = hashIdx >= 0 ? rawUrl.slice(0, hashIdx) : rawUrl
+            if (clean.startsWith('/media/')) {
+              clean = `.${clean}`
+            }
+            if (
+              clean.startsWith('./media/synced/') ||
+              clean.startsWith('./media/generated/')
+            ) {
+              const relFromPublic = clean.replace(/^\.\//, '')
+              const srcAbs = path.resolve(process.cwd(), 'public', relFromPublic)
+              if (fs.existsSync(srcAbs)) {
+                fs.mkdirSync(pubDir, { recursive: true })
+                const safeSlate = String(slateId || 'zine').replace(/[^a-zA-Z0-9_-]/g, '_')
+                const base = path.basename(srcAbs)
+                const destName = `${safeSlate}_${slot}_${base}`
+                const destAbs = path.join(pubDir, destName)
+                if (!fs.existsSync(destAbs)) {
+                  fs.copyFileSync(srcAbs, destAbs)
+                }
+                return `./media/published/${destName}${hash}`
+              }
+            }
+            return `${clean}${hash}`
+          }
+
+          const normalizedSlates = rawSlates.map((slate: any) => {
+            const sid = slate?.id || 'zine'
+            const gallery = Array.isArray(slate?.galleryUrls)
+              ? slate.galleryUrls.map((u: string, i: number) =>
+                  promoteUrl(u, sid, `shot${i + 1}`)
+                )
+              : undefined
+            const still = promoteUrl(slate?.stillUrl, sid, 'cover')
+            return {
+              ...slate,
+              stillUrl: gallery && gallery.length > 0 ? gallery[0] : still,
+              galleryUrls: gallery,
+              gifUrl: promoteUrl(slate?.gifUrl, sid, 'loop'),
+              videoUrl: promoteUrl(slate?.videoUrl, sid, 'cinema'),
+              audioUrl: promoteUrl(slate?.audioUrl, sid, 'song'),
+            }
+          })
+
+          const manifestPath = path.resolve(process.cwd(), 'public', 'shelf-issues.json')
+          fs.writeFileSync(
+            manifestPath,
+            JSON.stringify(
+              {
+                updatedAt: new Date().toISOString(),
+                slates: normalizedSlates,
+              },
+              null,
+              2
+            )
+          )
+
+          res.statusCode = 200
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ ok: true, slates: normalizedSlates }))
+        } catch (err: any) {
+          res.statusCode = 500
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: err?.message || 'Failed to write shelf-issues.json' }))
+        }
+      })
+
+      // Commit & push public/shelf-issues.json + public/media/published/ to GitHub Pages
+      server.middlewares.use('/api/shelf-publish', async (req: any, res: any) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end('Method Not Allowed')
+          return
+        }
+        try {
+          const cwd = process.cwd()
+          const pathsToAdd: string[] = []
+          if (fs.existsSync(path.join(cwd, 'public', 'shelf-issues.json'))) {
+            pathsToAdd.push('public/shelf-issues.json')
+          }
+          if (fs.existsSync(path.join(cwd, 'public', 'media', 'published'))) {
+            pathsToAdd.push('public/media/published')
+          }
+
+          if (pathsToAdd.length > 0) {
+            await execFileAsync('git', ['add', ...pathsToAdd], { cwd })
+          }
+
+          const { stdout: stagedOut } = await execFileAsync(
+            'git',
+            ['diff', '--cached', '--name-only'],
+            { cwd }
+          )
+          const hadChanges = Boolean(stagedOut.trim())
+          if (hadChanges) {
+            await execFileAsync(
+              'git',
+              ['commit', '-m', 'Publish updated Zine Shelf issues to Mobile Reader'],
+              { cwd }
+            )
+          }
+
+          await execFileAsync('git', ['push', 'origin', 'main'], { cwd })
+
+          res.statusCode = 200
+          res.setHeader('Content-Type', 'application/json')
+          res.end(
+            JSON.stringify({
+              ok: true,
+              committed: hadChanges,
+              message: hadChanges
+                ? '📲 Published to GitHub! Live on your phone in ~45 seconds!'
+                : '📲 Synced with GitHub! Phone reader is up to date!',
+            })
+          )
+        } catch (err: any) {
+          res.statusCode = 500
+          res.setHeader('Content-Type', 'application/json')
+          res.end(
+            JSON.stringify({
+              error: err?.stderr || err?.message || 'Git push to GitHub failed',
+            })
+          )
         }
       })
     },

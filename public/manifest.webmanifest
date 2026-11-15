@@ -1,7 +1,7 @@
 {
-  "name": "Mutable Echo Zine Lab",
-  "short_name": "ME! Zine",
-  "description": "Experimental Pop-Zine & Multi-Theme Archival Telemetry Studio",
+  "name": "Mutable Echo Zine Reader",
+  "short_name": "ME! Zines",
+  "description": "Pocket Zine Reader for Mutable Echo Interactive Issues",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
