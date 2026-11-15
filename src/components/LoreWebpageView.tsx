@@ -470,12 +470,89 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
     }
   }
 
-  const isPortraitVideo =
-    !!slate.gifUrl &&
-    (slate.gifUrl.includes('#video') ||
-      slate.gifUrl.startsWith('data:video/') ||
-      slate.gifUrl.toLowerCase().endsWith('.mp4') ||
-      slate.gifUrl.toLowerCase().endsWith('.webm'))
+  const isVideoLoopUrl = (url?: string) =>
+    !!url &&
+    (url.includes('#video') ||
+      url.startsWith('data:video/') ||
+      url.toLowerCase().endsWith('.mp4') ||
+      url.toLowerCase().endsWith('.webm'))
+
+  const renderStoryGifCard = (
+    loopUrl: string | undefined,
+    fallbackStill: string | undefined,
+    badgeLabel: string,
+    badgeBg: string,
+    badgeInk: string,
+    captionLabel: string,
+    tiltClass: string
+  ) => {
+    const isVid = isVideoLoopUrl(loopUrl)
+    return (
+      <div
+        className={`relative pop-card p-3.5 sm:p-4 flex flex-col justify-between ${tiltClass} hover:rotate-0 transition-transform duration-300`}
+        style={{ backgroundColor: zTheme.surfaceBg }}
+      >
+        <div className="washi-tape absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 rounded-sm -rotate-2 z-20 pointer-events-none" />
+
+        <div className="flex items-center justify-between gap-2 pb-2.5">
+          <span
+            className="px-3 py-1 rounded-full border-2 theme-border font-mono-zine text-xs font-bold uppercase"
+            style={{
+              backgroundColor: badgeBg,
+              color: badgeInk,
+            }}
+          >
+            {badgeLabel}
+          </span>
+          <span className="font-mono-zine text-[11px] font-bold">
+            {loopUrl ? '★ LIVE GIF LOOP' : 'MOTION SLOT'}
+          </span>
+        </div>
+
+        <div className="relative w-full rounded-2xl border-[3px] theme-border bg-[#121212] overflow-hidden flex items-center justify-center min-h-[200px]">
+          {loopUrl ? (
+            isVid ? (
+              <video
+                src={loopUrl.split('#')[0]}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-auto max-h-[520px] object-contain block"
+              />
+            ) : (
+              <img
+                src={loopUrl}
+                alt={badgeLabel}
+                className="w-full h-auto max-h-[520px] object-contain block"
+              />
+            )
+          ) : fallbackStill ? (
+            <img
+              src={fallbackStill}
+              alt={badgeLabel}
+              className="w-full h-auto max-h-[420px] object-cover block opacity-90"
+            />
+          ) : (
+            <div className="w-full py-12 flex items-center justify-center font-mono-zine text-xs text-white p-4 text-center">
+              Drop a Story GIF (.gif or loop .mp4) in Step 3!
+            </div>
+          )}
+
+          <div
+            className="pointer-events-none absolute bottom-3 right-3 px-3 py-1 rounded-full border-2 theme-border font-mono-zine text-[10px] font-bold uppercase -rotate-2"
+            style={{
+              backgroundColor: zTheme.popLime,
+              color: zTheme.popLimeInk,
+              boxShadow: '2px 2px 0 var(--ui-border)',
+            }}
+          >
+            {captionLabel}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -564,12 +641,259 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
 
       {/* ==================== MAIN ZINE PLAYGROUND CANVAS ==================== */}
       <div className="p-3.5 sm:p-8 lg:p-10 space-y-8 sm:space-y-10 halftone-dots">
-        {/* ==================== 2. MAGAZINE COVER MASTHEAD COLLAGE ==================== */}
+        {/* ==================== 2. HERO LEAD: FULL-WIDTH 1080P WIDESCREEN CINEMA + VINYL SOUNDTRACK ==================== */}
+        <section className="space-y-5">
+          {/* Full-Bleed 16:9 Cinema Monitor Leading the Zine */}
+          <div
+            style={{ backgroundColor: zTheme.surfaceBg }}
+            className="pop-card overflow-hidden"
+          >
+            <div
+              className="px-4 py-2.5 border-b-[3px] theme-border flex flex-wrap items-center justify-between gap-2"
+              style={{
+                backgroundColor: zTheme.popCyan,
+                color: zTheme.popCyanInk,
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded-full bg-[#FF2A85] border-2 border-[#121212]" />
+                <span className="w-3.5 h-3.5 rounded-full bg-[#FFE600] border-2 border-[#121212]" />
+                <span className="w-3.5 h-3.5 rounded-full bg-[#B8FF00] border-2 border-[#121212]" />
+                <span className="font-mono-zine text-xs font-bold uppercase ml-1">
+                  🎬 FEATURE PRESENTATION // 1080P HERO CINEMA
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {slate.videoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundEngine.triggerTactileBlip(790)
+                      setCinemaMode((m) =>
+                        m === 'video' ? 'popfx' : 'video'
+                      )
+                    }}
+                    style={{
+                      backgroundColor: zTheme.surfaceElevated,
+                      color: zTheme.ink,
+                    }}
+                    className="px-2.5 py-1 rounded-lg border-2 theme-border hover:brightness-110 font-mono-zine text-[11px] font-bold uppercase flex items-center gap-1 cursor-pointer"
+                  >
+                    {cinemaMode === 'video' ? (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" /> Pop FX Canvas
+                      </>
+                    ) : (
+                      <>
+                        <Film className="w-3.5 h-3.5" /> 1080p Video
+                      </>
+                    )}
+                  </button>
+                )}
+
+                {slate.videoUrl && cinemaMode === 'video' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (videoRef.current) {
+                        videoRef.current.muted = !videoMuted
+                        setVideoMuted(!videoMuted)
+                      }
+                    }}
+                    style={{
+                      backgroundColor: zTheme.surfaceElevated,
+                      color: zTheme.ink,
+                    }}
+                    className="px-2.5 py-1 rounded-lg border-2 theme-border hover:brightness-110 font-mono-zine text-[11px] font-bold uppercase cursor-pointer"
+                  >
+                    {videoMuted ? '🔇 Unmute' : '🔊 Live'}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = videoRef.current || popCanvasRef.current
+                    if (el?.requestFullscreen) el.requestFullscreen()
+                  }}
+                  style={{
+                    backgroundColor: zTheme.surfaceElevated,
+                    color: zTheme.ink,
+                  }}
+                  className="p-1 rounded-lg border-2 theme-border hover:brightness-110 cursor-pointer"
+                  title="Fullscreen"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="relative aspect-video w-full bg-[#121212] overflow-hidden">
+              {slate.videoUrl && cinemaMode === 'video' ? (
+                <video
+                  ref={videoRef}
+                  src={slate.videoUrl}
+                  poster={gallery[0]}
+                  autoPlay
+                  loop
+                  muted={videoMuted}
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <canvas
+                  ref={popCanvasRef}
+                  width={960}
+                  height={540}
+                  className="w-full h-full object-cover"
+                />
+              )}
+
+              <div
+                className="pointer-events-none absolute top-3 left-3 px-3 py-1 rounded-full border-2 theme-border font-mono-zine text-[11px] font-bold uppercase"
+                style={{
+                  backgroundColor: zTheme.popPink,
+                  color: zTheme.popPinkInk,
+                  boxShadow: '2px 2px 0 var(--ui-border)',
+                }}
+              >
+                ★ ISSUE #{String(slate.phaseIndex).padStart(2, '0')} LEAD STREAM
+              </div>
+
+              <div
+                className="pointer-events-none absolute bottom-3 left-3 px-3 py-1 rounded-full border-2 theme-border font-mono-zine text-[11px] font-bold uppercase"
+                style={{
+                  backgroundColor: zTheme.heroYellow,
+                  color: zTheme.heroYellowInk,
+                  boxShadow: '2px 2px 0 var(--ui-border)',
+                }}
+              >
+                {slate.cameraAngle}
+              </div>
+            </div>
+          </div>
+
+          {/* Tactile Boombox / Spinning Vinyl Soundtrack Deck Docked Beneath Hero Video */}
+          <div
+            className="pop-card p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4"
+            style={{ backgroundColor: zTheme.tile2, color: zTheme.ink }}
+          >
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={handleToggleAudio}
+                className="pop-btn px-5 py-3 font-display font-extrabold text-sm uppercase flex items-center gap-2 cursor-pointer"
+                style={{
+                  backgroundColor: audioPlaying
+                    ? zTheme.popLime
+                    : zTheme.popPink,
+                  color: audioPlaying
+                    ? zTheme.popLimeInk
+                    : zTheme.popPinkInk,
+                }}
+              >
+                {audioPlaying ? (
+                  <>
+                    <Pause className="w-4 h-4 fill-current" /> Pause Song
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 fill-current" /> Play Song
+                  </>
+                )}
+              </button>
+
+              <div
+                className={`w-11 h-11 rounded-full border-[3px] theme-border bg-[#121212] flex items-center justify-center shrink-0 ${
+                  audioPlaying || synthFallbackPlaying
+                    ? 'animate-vinyl-spin'
+                    : ''
+                }`}
+              >
+                <div
+                  className="w-5 h-5 rounded-full border-2 border-[#121212] flex items-center justify-center"
+                  style={{
+                    backgroundColor: zTheme.heroYellow,
+                    color: zTheme.heroYellowInk,
+                  }}
+                >
+                  <Disc3 className="w-3 h-3" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 w-full min-w-0 space-y-1.5">
+              <div className="flex items-center justify-between gap-2 text-xs font-bold">
+                <span className="truncate">
+                  🎵 {slate.audioTitle || 'Cyber-Noir Synthwave Track'}
+                </span>
+                <span className="font-mono-zine text-[11px] shrink-0">
+                  {slate.audioUrl
+                    ? `${formatSeconds(audioTime)} / ${formatSeconds(
+                        audioDuration
+                      )}`
+                    : 'SYNTH READY'}
+                </span>
+              </div>
+
+              <input
+                type="range"
+                min={0}
+                max={audioDuration || 100}
+                step={0.1}
+                value={audioTime}
+                disabled={!slate.audioUrl}
+                onChange={(e) => {
+                  const next = Number(e.target.value)
+                  setAudioTime(next)
+                  if (audioRef.current) audioRef.current.currentTime = next
+                }}
+                style={{
+                  accentColor: zTheme.popPink,
+                  backgroundColor: zTheme.inputBg,
+                }}
+                className="w-full h-2.5 rounded-full border-2 theme-border cursor-pointer"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <canvas
+                ref={spectrumCanvasRef}
+                width={156}
+                height={42}
+                style={{ backgroundColor: zTheme.inputBg }}
+                className="w-[140px] sm:w-[156px] h-[42px] rounded-xl border-2 theme-border p-1"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const nextVol = audioVolume > 0 ? 0 : 0.85
+                  setAudioVolume(nextVol)
+                  if (audioRef.current) audioRef.current.volume = nextVol
+                }}
+                style={{
+                  backgroundColor: zTheme.surfaceElevated,
+                  color: zTheme.ink,
+                }}
+                className="p-2 rounded-xl border-2 theme-border hover:brightness-110 cursor-pointer"
+                title="Mute / Unmute Music"
+              >
+                {audioVolume === 0 ? (
+                  <VolumeX className="w-4 h-4" />
+                ) : (
+                  <Volume2 className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ==================== 3. MAGAZINE COVER MASTHEAD COLLAGE ==================== */}
         <header
           className="relative pop-card p-4 sm:p-8 overflow-hidden"
           style={{ backgroundColor: zTheme.mastheadBg }}
         >
-          {/* Floating decorative halftone circles */}
           <div
             className="pointer-events-none absolute -right-12 -top-12 w-52 h-52 rounded-full border-[3px] theme-border opacity-85"
             style={{ backgroundColor: zTheme.popPink }}
@@ -580,7 +904,6 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
           />
 
           <div className="relative z-10 flex flex-col gap-4">
-            {/* Top Sticker Badges Row */}
             <div className="flex flex-wrap items-center gap-2.5">
               <span
                 className="px-3.5 py-1 rounded-full border-2 theme-border font-mono-zine text-xs font-bold uppercase -rotate-2"
@@ -615,7 +938,6 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
               </span>
             </div>
 
-            {/* Giant Expressive Zine Title */}
             <h1
               style={{
                 color: zTheme.mastheadInk,
@@ -628,7 +950,6 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
               {slate.title}
             </h1>
 
-            {/* Fun Story Pill Chips */}
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <span
                 style={{
@@ -665,319 +986,6 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
           </div>
         </header>
 
-        {/* ==================== 3. LOCKED ASYMMETRIC MEDIA WALL (16:9 TV + BOOMBOX + 9:16 COLLECTOR LOOP) ==================== */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-stretch">
-          {/* LEFT 8 COLS: 16:9 Cinema Monitor + Tactile Vinyl Boombox */}
-          <div className="lg:col-span-8 flex flex-col justify-between gap-6">
-            {/* 16:9 Retro-Pop Cinema TV */}
-            <div
-              style={{ backgroundColor: zTheme.surfaceBg }}
-              className="pop-card overflow-hidden"
-            >
-              {/* Retro Toy Window Header */}
-              <div
-                className="px-4 py-2.5 border-b-[3px] theme-border flex flex-wrap items-center justify-between gap-2"
-                style={{
-                  backgroundColor: zTheme.popCyan,
-                  color: zTheme.popCyanInk,
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="w-3.5 h-3.5 rounded-full bg-[#FF2A85] border-2 border-[#121212]" />
-                  <span className="w-3.5 h-3.5 rounded-full bg-[#FFE600] border-2 border-[#121212]" />
-                  <span className="w-3.5 h-3.5 rounded-full bg-[#B8FF00] border-2 border-[#121212]" />
-                  <span className="font-mono-zine text-xs font-bold uppercase ml-1">
-                    🎬 1080P WIDESCREEN CINEMA DECK
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {slate.videoUrl && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        soundEngine.triggerTactileBlip(790)
-                        setCinemaMode((m) =>
-                          m === 'video' ? 'popfx' : 'video'
-                        )
-                      }}
-                      style={{
-                        backgroundColor: zTheme.surfaceElevated,
-                        color: zTheme.ink,
-                      }}
-                      className="px-2.5 py-1 rounded-lg border-2 theme-border hover:brightness-110 font-mono-zine text-[11px] font-bold uppercase flex items-center gap-1 cursor-pointer"
-                    >
-                      {cinemaMode === 'video' ? (
-                        <>
-                          <Sparkles className="w-3.5 h-3.5" /> Pop FX Canvas
-                        </>
-                      ) : (
-                        <>
-                          <Film className="w-3.5 h-3.5" /> 1080p Video
-                        </>
-                      )}
-                    </button>
-                  )}
-
-                  {slate.videoUrl && cinemaMode === 'video' && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (videoRef.current) {
-                          videoRef.current.muted = !videoMuted
-                          setVideoMuted(!videoMuted)
-                        }
-                      }}
-                      style={{
-                        backgroundColor: zTheme.surfaceElevated,
-                        color: zTheme.ink,
-                      }}
-                      className="px-2.5 py-1 rounded-lg border-2 theme-border hover:brightness-110 font-mono-zine text-[11px] font-bold uppercase cursor-pointer"
-                    >
-                      {videoMuted ? '🔇 Unmute' : '🔊 Live'}
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const el = videoRef.current || popCanvasRef.current
-                      if (el?.requestFullscreen) el.requestFullscreen()
-                    }}
-                    style={{
-                      backgroundColor: zTheme.surfaceElevated,
-                      color: zTheme.ink,
-                    }}
-                    className="p-1 rounded-lg border-2 theme-border hover:brightness-110 cursor-pointer"
-                    title="Fullscreen"
-                  >
-                    <Maximize2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* 16:9 Viewport */}
-              <div className="relative aspect-video w-full bg-[#121212] overflow-hidden">
-                {slate.videoUrl && cinemaMode === 'video' ? (
-                  <video
-                    ref={videoRef}
-                    src={slate.videoUrl}
-                    poster={gallery[0]}
-                    autoPlay
-                    loop
-                    muted={videoMuted}
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <canvas
-                    ref={popCanvasRef}
-                    width={960}
-                    height={540}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-
-                <div
-                  className="pointer-events-none absolute bottom-3 left-3 px-3 py-1 rounded-full border-2 theme-border font-mono-zine text-[11px] font-bold uppercase"
-                  style={{
-                    backgroundColor: zTheme.heroYellow,
-                    color: zTheme.heroYellowInk,
-                    boxShadow: '2px 2px 0 var(--ui-border)',
-                  }}
-                >
-                  {slate.cameraAngle}
-                </div>
-              </div>
-            </div>
-
-            {/* Tactile Boombox / Spinning Vinyl Soundtrack Deck */}
-            <div
-              className="pop-card p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4"
-              style={{ backgroundColor: zTheme.tile2, color: zTheme.ink }}
-            >
-              {/* Spinning Vinyl + Play Button */}
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  type="button"
-                  onClick={handleToggleAudio}
-                  className="pop-btn px-5 py-3 font-display font-extrabold text-sm uppercase flex items-center gap-2 cursor-pointer"
-                  style={{
-                    backgroundColor: audioPlaying
-                      ? zTheme.popLime
-                      : zTheme.popPink,
-                    color: audioPlaying
-                      ? zTheme.popLimeInk
-                      : zTheme.popPinkInk,
-                  }}
-                >
-                  {audioPlaying ? (
-                    <>
-                      <Pause className="w-4 h-4 fill-current" /> Pause Song
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4 fill-current" /> Play Song
-                    </>
-                  )}
-                </button>
-
-                <div
-                  className={`w-11 h-11 rounded-full border-[3px] theme-border bg-[#121212] flex items-center justify-center shrink-0 ${
-                    audioPlaying || synthFallbackPlaying
-                      ? 'animate-vinyl-spin'
-                      : ''
-                  }`}
-                >
-                  <div
-                    className="w-5 h-5 rounded-full border-2 border-[#121212] flex items-center justify-center"
-                    style={{
-                      backgroundColor: zTheme.heroYellow,
-                      color: zTheme.heroYellowInk,
-                    }}
-                  >
-                    <Disc3 className="w-3 h-3" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Scrubber & Track Name */}
-              <div className="flex-1 w-full min-w-0 space-y-1.5">
-                <div className="flex items-center justify-between gap-2 text-xs font-bold">
-                  <span className="truncate">
-                    🎵 {slate.audioTitle || 'Cyber-Noir Synthwave Track'}
-                  </span>
-                  <span className="font-mono-zine text-[11px] shrink-0">
-                    {slate.audioUrl
-                      ? `${formatSeconds(audioTime)} / ${formatSeconds(
-                          audioDuration
-                        )}`
-                      : 'SYNTH READY'}
-                  </span>
-                </div>
-
-                <input
-                  type="range"
-                  min={0}
-                  max={audioDuration || 100}
-                  step={0.1}
-                  value={audioTime}
-                  disabled={!slate.audioUrl}
-                  onChange={(e) => {
-                    const next = Number(e.target.value)
-                    setAudioTime(next)
-                    if (audioRef.current) audioRef.current.currentTime = next
-                  }}
-                  style={{
-                    accentColor: zTheme.popPink,
-                    backgroundColor: zTheme.inputBg,
-                  }}
-                  className="w-full h-2.5 rounded-full border-2 theme-border cursor-pointer"
-                />
-              </div>
-
-              {/* Candy Spectrum Visualizer + Volume */}
-              <div className="flex items-center gap-3 shrink-0">
-                <canvas
-                  ref={spectrumCanvasRef}
-                  width={156}
-                  height={42}
-                  style={{ backgroundColor: zTheme.inputBg }}
-                  className="w-[140px] sm:w-[156px] h-[42px] rounded-xl border-2 theme-border p-1"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nextVol = audioVolume > 0 ? 0 : 0.85
-                    setAudioVolume(nextVol)
-                    if (audioRef.current) audioRef.current.volume = nextVol
-                  }}
-                  style={{
-                    backgroundColor: zTheme.surfaceElevated,
-                    color: zTheme.ink,
-                  }}
-                  className="p-2 rounded-xl border-2 theme-border hover:brightness-110 cursor-pointer"
-                  title="Mute / Unmute Music"
-                >
-                  {audioVolume === 0 ? (
-                    <VolumeX className="w-4 h-4" />
-                  ) : (
-                    <Volume2 className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT 4 COLS: Tilted 9:16 Vertical Arcade / Collector Loop */}
-          <div className="lg:col-span-4 flex flex-col">
-            <div
-              className="relative flex-1 pop-card p-4 flex flex-col justify-between lg:rotate-[1.2deg] hover:rotate-0 transition-transform duration-300"
-              style={{ backgroundColor: zTheme.surfaceBg }}
-            >
-              {/* Decorative Washi Tape Strip on Top */}
-              <div className="washi-tape absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 rounded-sm -rotate-2 z-20 pointer-events-none" />
-
-              <div className="flex items-center justify-between pb-3">
-                <span
-                  className="px-3 py-1 rounded-full border-2 theme-border font-mono-zine text-xs font-bold uppercase"
-                  style={{
-                    backgroundColor: zTheme.popPink,
-                    color: zTheme.popPinkInk,
-                  }}
-                >
-                  📱 9:16 KINETIC LOOP
-                </span>
-                <span className="font-mono-zine text-[11px] font-bold">
-                  {slate.gifUrl ? '★ LIVE' : 'PORTRAIT'}
-                </span>
-              </div>
-
-              <div className="relative aspect-[9/16] w-full rounded-2xl border-[3px] theme-border bg-[#121212] overflow-hidden">
-                {slate.gifUrl ? (
-                  isPortraitVideo ? (
-                    <video
-                      src={slate.gifUrl.split('#')[0]}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <img
-                      src={slate.gifUrl}
-                      alt="9:16 Kinetic Loop"
-                      className="w-full h-full object-cover"
-                    />
-                  )
-                ) : gallery[0] ? (
-                  <img
-                    src={gallery[0]}
-                    alt="9:16 Portrait Preview"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center font-mono-zine text-xs text-white p-4 text-center">
-                    Drop your 9:16 GIF or vertical MP4 in Step 3!
-                  </div>
-                )}
-
-                <div
-                  className="pointer-events-none absolute bottom-3 right-3 px-3 py-1 rounded-full border-2 theme-border font-mono-zine text-[10px] font-bold uppercase -rotate-2"
-                  style={{
-                    backgroundColor: zTheme.popLime,
-                    color: zTheme.popLimeInk,
-                    boxShadow: '2px 2px 0 var(--ui-border)',
-                  }}
-                >
-                  LOOPING FOREVER ∞
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* ==================== 4. KINETIC SCROLLING ZINE TICKER RIBBON ==================== */}
         <div
           className="pop-card py-2.5 overflow-hidden border-[3px] theme-border"
@@ -988,24 +996,22 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
         >
           <div className="animate-zine-marquee font-mono-zine text-xs sm:text-sm font-bold uppercase tracking-widest">
             <span className="mx-6">
-              ★ 3-ACT GRAPHIC CHRONICLE ★ 4 DISTINCT CAMERA SHOTS ★{' '}
-              {slate.actPhase} ★ {slate.lightingStyle} ★ CLICK ANY PRINT FOR 2K
-              LIGHTBOX ★
+              ★ LONG-FORM 3-ACT CHRONICLE ★ 2 LIVE STORY GIF LOOPS ★ 4 DISTINCT
+              CAMERA SHOTS ★ {slate.actPhase} ★ CLICK ANY PRINT FOR 2K LIGHTBOX ★
             </span>
             <span className="mx-6">
-              ★ 3-ACT GRAPHIC CHRONICLE ★ 4 DISTINCT CAMERA SHOTS ★{' '}
-              {slate.actPhase} ★ {slate.lightingStyle} ★ CLICK ANY PRINT FOR 2K
-              LIGHTBOX ★
+              ★ LONG-FORM 3-ACT CHRONICLE ★ 2 LIVE STORY GIF LOOPS ★ 4 DISTINCT
+              CAMERA SHOTS ★ {slate.actPhase} ★ CLICK ANY PRINT FOR 2K LIGHTBOX ★
             </span>
           </div>
         </div>
 
-        {/* ==================== 5. EXPERIMENTAL ZIG-ZAG ZINE SPREADS (3 ACTS × 4 DISTINCT SHOTS) ==================== */}
+        {/* ==================== 5. EXPANDED 3-ACT STORY + 2 STORY GIFS + 4 SHOTS ==================== */}
         <div className="space-y-12">
-          {/* ---------- SPREAD 01: ACT I (LEFT) + SHOT 01 WIDE WORLD (RIGHT) ---------- */}
-          <section className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
+          {/* ---------- SPREAD 01: ACT I LONG-FORM PROSE (LEFT) + STORY GIF #1 & SHOT 01 WIDE WORLD (RIGHT) ---------- */}
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
             <article
-              className="lg:col-span-5 pop-card p-6 sm:p-8 relative overflow-hidden"
+              className="lg:col-span-6 pop-card p-6 sm:p-8 relative overflow-hidden"
               style={{ backgroundColor: zTheme.tile1, color: zTheme.ink }}
             >
               <div className="flex items-center justify-between mb-3">
@@ -1023,50 +1029,60 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
                   01
                 </span>
               </div>
-              <h2 className="font-display text-2xl sm:text-3xl font-extrabold uppercase leading-tight mb-3">
+              <h2 className="font-display text-2xl sm:text-3xl font-extrabold uppercase leading-tight mb-4">
                 Entering {slate.environmentBiome}
               </h2>
-              <p className="text-base sm:text-[17px] leading-relaxed font-medium opacity-95 whitespace-pre-line">
+              <p className="text-base sm:text-[17px] leading-[1.75] font-medium opacity-95 whitespace-pre-line">
                 {slate.acts.sceneSetup}
               </p>
             </article>
 
-            {gallery[0] && (
-              <div
-                onClick={() => setLightboxIndex(0)}
-                style={{ backgroundColor: zTheme.surfaceBg }}
-                className="lg:col-span-7 relative pop-card pop-card-lift p-3 sm:p-4 cursor-pointer lg:rotate-[1deg] hover:rotate-0"
-              >
-                <div className="washi-tape absolute -top-3 right-10 w-28 h-6 rounded-sm rotate-2 z-20 pointer-events-none" />
-                <div className="aspect-[16/10] rounded-xl border-[2.5px] theme-border overflow-hidden bg-[#121212]">
-                  <img
-                    src={gallery[0]}
-                    alt="Shot 01 Wide World"
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                  />
+            <div className="lg:col-span-6 space-y-6">
+              {renderStoryGifCard(
+                slate.gifUrl,
+                gallery[0],
+                '🎞️ STORY GIF 01 // ACT I TENSION LOOP',
+                zTheme.popPink,
+                zTheme.popPinkInk,
+                'ACT I MOTION ∞',
+                'lg:rotate-[0.9deg]'
+              )}
+
+              {gallery[0] && (
+                <div
+                  onClick={() => setLightboxIndex(0)}
+                  style={{ backgroundColor: zTheme.surfaceBg }}
+                  className="relative pop-card pop-card-lift p-3 sm:p-4 cursor-pointer lg:-rotate-[0.7deg] hover:rotate-0"
+                >
+                  <div className="aspect-[16/10] rounded-xl border-[2.5px] theme-border overflow-hidden bg-[#121212]">
+                    <img
+                      src={gallery[0]}
+                      alt="Shot 01 Wide World"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="pt-3 px-1 flex flex-wrap items-center justify-between gap-2">
+                    <span
+                      className="px-3 py-1 rounded-full border-2 theme-border font-mono-zine text-xs font-bold uppercase"
+                      style={{
+                        backgroundColor: zTheme.popCyan,
+                        color: zTheme.popCyanInk,
+                      }}
+                    >
+                      🌍 SHOT 01 // WIDE ESTABLISHING
+                    </span>
+                    <span className="font-mono-zine text-xs font-bold underline">
+                      Pop Open 2K ⤢
+                    </span>
+                  </div>
                 </div>
-                <div className="pt-3 px-1 flex flex-wrap items-center justify-between gap-2">
-                  <span
-                    className="px-3 py-1 rounded-full border-2 theme-border font-mono-zine text-xs font-bold uppercase"
-                    style={{
-                      backgroundColor: zTheme.popCyan,
-                      color: zTheme.popCyanInk,
-                    }}
-                  >
-                    🌍 SHOT 01 // WIDE ESTABLISHING
-                  </span>
-                  <span className="font-mono-zine text-xs font-bold underline">
-                    Pop Open 2K ⤢
-                  </span>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </section>
 
-          {/* ---------- SPREAD 02 (REVERSED COLLAGE): SHOT 02 ACTION + INSET SHOT 03 MACRO (LEFT) × ACT II + DOSSIER STICKERS (RIGHT) ---------- */}
-          <section className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
-            {/* Left 7 Cols: Shot 02 + Overlapping Comic Inset Shot 03 */}
-            <div className="lg:col-span-7 space-y-5 order-2 lg:order-1">
+          {/* ---------- SPREAD 02 (REVERSED COLLAGE): SHOT 02 ACTION + INSET SHOT 03 MACRO (LEFT) × ACT II LONG-FORM + SPECS (RIGHT) ---------- */}
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+            <div className="lg:col-span-6 space-y-5 order-2 lg:order-1">
               {gallery[1] && (
                 <div
                   onClick={() => setLightboxIndex(1)}
@@ -1097,12 +1113,11 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
                 </div>
               )}
 
-              {/* Comic Inset Panel for Shot 03 (Macro Hardware Detail) */}
               {gallery[2] && (
                 <div
                   onClick={() => setLightboxIndex(2)}
                   style={{ backgroundColor: zTheme.surfaceBg }}
-                  className="sm:w-4/5 sm:ml-auto relative pop-card pop-card-lift p-3 cursor-pointer lg:rotate-[1.5deg] hover:rotate-0"
+                  className="sm:w-11/12 sm:ml-auto relative pop-card pop-card-lift p-3 cursor-pointer lg:rotate-[1.2deg] hover:rotate-0"
                 >
                   <div className="washi-tape absolute -top-3 left-8 w-24 h-5 rounded-sm -rotate-2 z-20 pointer-events-none" />
                   <div className="aspect-[16/9] rounded-xl border-[2.5px] theme-border overflow-hidden bg-[#121212]">
@@ -1130,8 +1145,7 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
               )}
             </div>
 
-            {/* Right 5 Cols: Act II Prose + Trading-Sticker Specs */}
-            <div className="lg:col-span-5 space-y-6 order-1 lg:order-2">
+            <div className="lg:col-span-6 space-y-6 order-1 lg:order-2">
               <article
                 className="pop-card p-6 sm:p-8"
                 style={{ backgroundColor: zTheme.tile2, color: zTheme.ink }}
@@ -1151,15 +1165,14 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
                     02
                   </span>
                 </div>
-                <h2 className="font-display text-2xl sm:text-3xl font-extrabold uppercase leading-tight mb-3">
+                <h2 className="font-display text-2xl sm:text-3xl font-extrabold uppercase leading-tight mb-4">
                   {slate.action}
                 </h2>
-                <p className="text-base sm:text-[17px] leading-relaxed font-medium opacity-95 whitespace-pre-line">
+                <p className="text-base sm:text-[17px] leading-[1.75] font-medium opacity-95 whitespace-pre-line">
                   {slate.acts.intervention}
                 </p>
               </article>
 
-              {/* Playful Collector Sticker Specs */}
               <div
                 style={{ backgroundColor: zTheme.surfaceBg }}
                 className="pop-card p-5 space-y-3"
@@ -1202,9 +1215,9 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
             </div>
           </section>
 
-          {/* ---------- SPREAD 03: ACT III + PLUCKABLE RAINBOW WAVE TOY (LEFT) × SHOT 04 AFTERMATH (RIGHT) ---------- */}
-          <section className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
-            <div className="lg:col-span-5 space-y-6">
+          {/* ---------- SPREAD 03: ACT III LONG-FORM + WAVE TOY (LEFT) × STORY GIF #2 & SHOT 04 AFTERMATH (RIGHT) ---------- */}
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+            <div className="lg:col-span-6 space-y-6">
               <article
                 className="pop-card p-6 sm:p-8"
                 style={{ backgroundColor: zTheme.tile3, color: zTheme.ink }}
@@ -1224,15 +1237,14 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
                     03
                   </span>
                 </div>
-                <h2 className="font-display text-2xl sm:text-3xl font-extrabold uppercase leading-tight mb-3">
+                <h2 className="font-display text-2xl sm:text-3xl font-extrabold uppercase leading-tight mb-4">
                   The Quiet Aftermath
                 </h2>
-                <p className="text-base sm:text-[17px] leading-relaxed font-medium opacity-95 whitespace-pre-line">
+                <p className="text-base sm:text-[17px] leading-[1.75] font-medium opacity-95 whitespace-pre-line">
                   {slate.acts.aftermath}
                 </p>
               </article>
 
-              {/* Interactive Pluckable Synth Wave Toy */}
               <div
                 onClick={handlePluckWave}
                 style={{ backgroundColor: zTheme.surfaceBg }}
@@ -1262,36 +1274,48 @@ export const LoreWebpageView: React.FC<LoreWebpageViewProps> = ({
               </div>
             </div>
 
-            {gallery[3] && (
-              <div
-                onClick={() => setLightboxIndex(3)}
-                style={{ backgroundColor: zTheme.surfaceBg }}
-                className="lg:col-span-7 relative pop-card pop-card-lift p-3 sm:p-4 cursor-pointer lg:rotate-[0.9deg] hover:rotate-0"
-              >
-                <div className="washi-tape absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 rounded-sm -rotate-1 z-20 pointer-events-none" />
-                <div className="aspect-[16/10] rounded-xl border-[2.5px] theme-border overflow-hidden bg-[#121212]">
-                  <img
-                    src={gallery[3]}
-                    alt="Shot 04 Quiet Aftermath"
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                  />
+            <div className="lg:col-span-6 space-y-6">
+              {renderStoryGifCard(
+                slate.gifUrl2 || slate.gifUrl,
+                gallery[3] || gallery[0],
+                '🎞️ STORY GIF 02 // ACT III AFTERMATH LOOP',
+                zTheme.popCyan,
+                zTheme.popCyanInk,
+                'ACT III MOTION ∞',
+                'lg:-rotate-[0.9deg]'
+              )}
+
+              {gallery[3] && (
+                <div
+                  onClick={() => setLightboxIndex(3)}
+                  style={{ backgroundColor: zTheme.surfaceBg }}
+                  className="relative pop-card pop-card-lift p-3 sm:p-4 cursor-pointer lg:rotate-[0.8deg] hover:rotate-0"
+                >
+                  <div className="washi-tape absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 rounded-sm -rotate-1 z-20 pointer-events-none" />
+                  <div className="aspect-[16/10] rounded-xl border-[2.5px] theme-border overflow-hidden bg-[#121212]">
+                    <img
+                      src={gallery[3]}
+                      alt="Shot 04 Quiet Aftermath"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="pt-3 px-1 flex flex-wrap items-center justify-between gap-2">
+                    <span
+                      className="px-3 py-1 rounded-full border-2 theme-border font-mono-zine text-xs font-bold uppercase"
+                      style={{
+                        backgroundColor: zTheme.popLime,
+                        color: zTheme.popLimeInk,
+                      }}
+                    >
+                      🌅 SHOT 04 // QUIET AFTERMATH
+                    </span>
+                    <span className="font-mono-zine text-xs font-bold underline">
+                      Pop Open 2K ⤢
+                    </span>
+                  </div>
                 </div>
-                <div className="pt-3 px-1 flex flex-wrap items-center justify-between gap-2">
-                  <span
-                    className="px-3 py-1 rounded-full border-2 theme-border font-mono-zine text-xs font-bold uppercase"
-                    style={{
-                      backgroundColor: zTheme.popLime,
-                      color: zTheme.popLimeInk,
-                    }}
-                  >
-                    🌅 SHOT 04 // QUIET AFTERMATH
-                  </span>
-                  <span className="font-mono-zine text-xs font-bold underline">
-                    Pop Open 2K ⤢
-                  </span>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </section>
         </div>
 

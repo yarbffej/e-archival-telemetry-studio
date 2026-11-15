@@ -1581,6 +1581,7 @@ export interface ArchivalTelemetrySlate {
   stillUrl: string
   galleryUrls?: string[]
   gifUrl?: string
+  gifUrl2?: string
   videoUrl?: string
   audioUrl?: string
   audioTitle: string
@@ -1627,18 +1628,19 @@ export const INITIAL_VAULT_SLATES: ArchivalTelemetrySlate[] = [
       './media/s01_walter_3.jpg',
       './media/s01_walter_4.jpg',
     ],
-    gifUrl: './media/sample_916.gif',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s01_walter.mp4',
     audioUrl: './media/s01_walter.mp3',
     audioTitle: 'Solvent and Steel (Take 2).mp3',
     driveFolderId: '1inCcy5NWReig6LD42LJyTl0bUmvgrFhy',
     acts: {
       sceneSetup:
-        'The overhead fluorescent banks stutter in rhythmic decay, bathing the Buffer Collapse Arcade and Sub-Level 4 in a washed-out, jaundiced amber. Walter drags his fiber-optic sensor mop through a puddle of coagulated memory-grease, his vulcanized suit yellowed by decades of vaporized alkaline while the masked operative stands motionless against a load-bearing column.',
+        'The overhead fluorescent banks stutter in rhythmic decay, bathing the Buffer Collapse Arcade and Sub-Level 4 in a washed-out, jaundiced amber. Along the lower service concourse, decades of weeping oil seals and unlogged pressure bleeds have coated the concrete ribs in a slick skin of coagulated memory-grease that catches every dying sodium flicker.\n\nWalter drags his fiber-optic sensor mop across the flooded channel in slow, practiced arcs, his patched vulcanized hazard suit yellowed at the cuffs by years of vaporized alkaline. Every fourteen seconds, an overloaded sub-sector drainage manifold Overhead shudders hard enough to shake rust flakes into his bucket, threatening to burst its bolted collar and drown the entire corridor.\n\nTen paces back against a load-bearing iron column stands a motionless dark silhouette—sealed behind a smooth, featureless obsidian dome visor, watching the pressure gauges climb into the crimson zone without making a sound.',
       intervention:
-        'A few yards down the primary concourse, Walter dips the fiber-optic mop into a galvanized drum of sloshing solvent, releasing thin caustic ribbons of blue vapor. The operative moves across the buckling catwalk and shuts down the main sub-level drainage manifold valve by hand, draining the centuries of accumulated hydraulic leakage.',
+        'A few yards down the primary concourse, Walter dips the fiber-optic mop head into a galvanized drum of sloshing solvent, releasing thin caustic ribbons of pale blue vapor into the draft. Above him, a secondary conduit hanger snaps loose from the ceiling truss with a sharp metallic crack, swinging wildly across the catwalk span.\n\nBefore the pipe can strike the lower railing, the masked operative sprints across the buckling overhead catwalk in complete silence, boots finding clean purchase on slick diamond-plate steel. Reaching the seized Sub-Sector 4 junction box, gloved hands grip the scalding cast-iron handwheel that three maintenance crews had marked immovable.\n\nMuscle and leverage lock against sixty years of calcified torque. With a low, resonant groan that travels through every girder in the arcade, the bypass valve breaks free—venting a towering plume of trapped steam toward the rafters and draining centuries of accumulated hydraulic back-pressure down into the deep sumps.',
       aftermath:
-        'Beneath Walter’s rubber boots lies a stretch of purified stone—mathematically flat charcoal grey devoid of friction, footprints, or entropic history. The operative vanishes into the particulate fog, leaving Walter in quiet equilibrium beside the bone-dry floor.',
+        'For several long seconds, the only sound left in Sub-Level 4 is the soft, musical ticking of cooling iron pipes. Beneath Walter’s heavy rubber boots, the dark slurry recedes completely, revealing a stretch of purified stone—mathematically flat charcoal grey devoid of grease, footprints, or entropic history.\n\nWalter leans both hands on the handle of his sensor mop, listening to a room that has not been truly quiet since he first took the shift. Up on the catwalk, the sodium mist parts around an empty railing; the faceless operative has already slipped down the far maintenance stair and dissolved into the particulate fog without looking back.',
     },
     diagnostics: {
       obligationDensity: 'CRITICAL // 98.4%',
@@ -1674,18 +1676,19 @@ export const INITIAL_VAULT_SLATES: ArchivalTelemetrySlate[] = [
       './media/s02_iron_chapel_3.jpg',
       './media/s02_iron_chapel_4.jpg',
     ],
-    gifUrl: './media/sample_916.gif',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s02_iron_chapel.mp4',
     audioUrl: './media/s02_iron_chapel.mp3',
     audioTitle: 'The Iron Chapel Report.mp3',
     driveFolderId: '1i5WErN2BQ9neoaBppmtgdNjq59yK0I7m',
     acts: {
       sceneSetup:
-        'Needles falling from the brass canopy strike ceramic shoulder plates like dropped tin tacks. Beneath interlocking boughs, root networks pulse with ghostly cyan luminescence—dormant architectural blueprints projecting foundation lines and vault arches into the sulfuric fog around Lily’s crumpled charcoal drawings.',
+        'Needles falling from the brass-armored pine canopy strike ceramic shoulder plates like dropped tin tacks. High above the vaulted nave of the Iron Chapel, interlocking metallic boughs sway in the ember-lit draft while weeping copper bypass valves hiss slow ribbons of green-tinted steam down the stone buttresses.\n\nAcross the cracked slate floor, exposed mycorrhizal root networks pulse with erratic cyan luminescence—dormant architectural blueprints misfiring in the damp, projecting phantom foundation lines and trembling vault ribs through the sulfuric fog.\n\nCurled beside a warm condenser housing, Lily spreads her charcoal and neon-chalk sketches across the flagstone, watching the projected grid lines jitter closer to overload with every surge from the roots below.',
       intervention:
-        'A sudden dampening swallows the metallic resonance of the Iron Chapel. The operative materializes between two armored trunks and slots a heavy grounding spike directly into the primary mycorrhizal relay beneath the moss.',
+        'A sudden barometric hush swallows the metallic ring of the nave. Stepping between two towering brass-sheathed trunks comes the operative in light-deprived ballistic canvas and dual scrubber canisters, the smooth black dome visor reflecting ember orange against leaden slate haze.\n\nKneeling beside the primary root junction without disturbing a single sheet of Lily’s drawings, the operative unclips a heavy copper-jacketed grounding spike from their harness and aligns its tip directly over the overcharged mycorrhizal relay collar.\n\nTwo steady, two-handed drives seat the grounding rod deep into the wet sub-stone. Stray electrical arcs race harmlessly down the copper shaft into bedrock, bleeding off the runaway projection current in a single warm sigh of ionized vapor.',
       aftermath:
-        'The projected blueprint schematics vanish into dithered ash, dropping the floor into quiet, stabilized stillness save for the soft clinking of overhead brass needles. The operative melts back into the sulfuric mist without taking the drawings.',
+        'The frantic phantom schematics dissolve upward like dithered ash, leaving the vaulted arches calm and solid in the amber gloom. Overhead, the brass pine needles settle back into a gentle, unhurried wind chime rhythm.\n\nLily gathers her neon sketches from dry stone that no longer buzzes against her palms. When she glances back toward the colonnade, only faint boot-prints in the damp moss mark where the operative walked back into the sulfuric mist.',
     },
     diagnostics: {
       obligationDensity: 'CRITICAL // 94.2%',
@@ -1715,17 +1718,19 @@ export const INITIAL_VAULT_SLATES: ArchivalTelemetrySlate[] = [
     perspective: 'Dr. Aris (Multi-focal optical diagnostic lens)',
     masterSeedTitle: 'The Mirror-Kin Enclave',
     stillUrl: './media/s03_aris.jpg',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s03_aris.mp4',
     audioUrl: './media/s03_aris.mp3',
     audioTitle: 'Silent Lines.mp3',
     driveFolderId: '1wsQLQzzxYKS_4YAWda67Tpyoy5daVmgZ',
     acts: {
       sceneSetup:
-        'The corridor of the Silent Lines stretches into monochrome exhaustion, framed by oxidized conduit that deadens the hum of sub-floor coolant channels. Overhead strips flicker on a dying pulse as Dr. Aris sits slumped against decommissioned junction boxes, four brass-ringed lenses twitching in out-of-sync micro-adjustments.',
+        'The corridor of the Silent Lines stretches into bruised-plum exhaustion, framed by oxidized iron conduit that traps the sub-audible throb of sub-floor coolant channels. Overhead cathode strips stutter on a dying relay cycle, painting long indigo shadows across decommissioned navigation lockers.\n\nSlumped against the primary junction housing sits Dr. Aris, four brass-ringed ocular lenses clicking in involuntary micro-adjustments as they try to track a phantom harmonic vibrating through the wall plates. Every breath tastes of cold dielectric fluid and sleeplessness.',
       intervention:
-        'Between the two figures, the narrow hall becomes an airlock of suspended consequence. The operative does not raise a weapon; instead, they trace the chemical spore trail across the junction housing and uncouple the main coolant relay valve, letting the machinery in the wall finish running out of air.',
+        'At the far airlock threshold, the indigo haze parts around an unblinking obsidian visor. Between the two figures, the narrow hall becomes a chamber of suspended consequence—no alarms, no drawn weapons, only the steady footfalls of the operative crossing the grated floor.\n\nFollowing the faint chemical spore residue crusted along the rock shelf, gloved fingers locate the seized auxiliary coolant bleed valve buried behind the junction housing. Bracing one shoulder against the conduit rib, the operative uncouples the pressurized collar by hand, letting the trapped feedback loop vent safely into the lower sump.',
       aftermath:
-        'Aris exhales a low pneumatic rasp as the compound lenses lock into calm focus for the first time in cycles. The threshold stands empty—the oppressive pressure replaced by quiet, irreversible clarity.',
+        'Inside the wall, decades of starved pump cavitation wind down to a peaceful stop. Dr. Aris exhales a long pneumatic rasp as all four brass ocular rings finally click into synchronized, effortless focus for the first time in cycles.\n\nDown the corridor, the threshold stands empty—the oppressive barometric vise replaced by cool air and irreversible clarity as the operative fades beyond the last flickering strip light.',
     },
     diagnostics: {
       obligationDensity: 'CRITICAL // 96.1%',
@@ -1755,17 +1760,19 @@ export const INITIAL_VAULT_SLATES: ArchivalTelemetrySlate[] = [
     perspective: 'Qrix (Chitinoid compound ocular POV)',
     masterSeedTitle: 'The Monolithic Sieve',
     stillUrl: './media/s04_tuning_blade.jpg',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s04_tuning_blade.mp4',
     audioUrl: './media/s04_tuning_blade.mp3',
     audioTitle: 'Echo of the Tuning Blade.mp3',
     driveFolderId: '170hcY6Ld5GYUxWOJzizEF-eDhz3qDW-J',
     acts: {
       sceneSetup:
-        'Within the flooded elevator shaft of Node AZ, Qrix clings to the corroded iron guide rails, tapping multi-jointed chitinous appendages against the main riser pipes in frantic rhythmic pulses as boiling mercury and oil slicks swirl below.',
+        'Within the flooded elevator shaft of Node AZ, corroded iron guide rails vanish upward into leaden slate haze backlit by distant furnace embers. Far below the snapped hoist cables, heavy chemical drums bob in slow circles across iridescent oil slicks.\n\nClinging midway up the wet steel framework, Qrix taps multi-jointed chitinous appendages against the main vertical riser pipes in frantic rhythmic bursts—trying to counter a violent harmonic tremor threatening to shake the entire shaft loose.',
       intervention:
-        'Viewed from a steep worm’s-eye angle through Qrix’s compound oculars, the faceless operative descends the maintenance gantry and clamps a heavy acoustic dampener collar around the main riser pipe, arresting the resonant tremor.',
+        'Viewed from a steep worm’s-eye angle through Qrix’s compound ocular facets, a sleek dark figure descends the maintenance gantry rung by rung without disturbing the swaying cables.\n\nReaching the resonating riser joint beside Qrix, the faceless operative unlatches a heavy segmented acoustic dampener collar from their pack, wraps its lead-lined jaws around the vibrating pipe seam, and torques both locking bolts home until the metal stops singing.',
       aftermath:
-        'The violent harmonic shaking across the shaft ceases immediately. Qrix’s compound lenses stabilize as the operative ascends back into the leaden slate haze.',
+        'The violent harmonic shaking across the elevator shaft ceases in a single heartbeat. Ripples along the flooded sump flatten into dark mirror glass beneath the ember glow.\n\nQrix’s compound lenses settle out of defensive Alert as the operative climbs silently back up the maintenance ladder and disappears into the upper slate mist.',
     },
     diagnostics: {
       obligationDensity: 'CRITICAL // 99.1%',
@@ -1795,17 +1802,19 @@ export const INITIAL_VAULT_SLATES: ArchivalTelemetrySlate[] = [
     perspective: 'The Golem (Tectonic vibration sensor map)',
     masterSeedTitle: 'The Chrono-Vapor Lounge',
     stillUrl: './media/s05_golden_tether.jpg',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s05_golden_tether.mp4',
     audioUrl: './media/s05_golden_tether.mp3',
     audioTitle: 'Archive_ The Golden Tether.mp3',
     driveFolderId: '1NSNpUDDILXc0JaKOuoRi8AHeztJ0Jd0T',
     acts: {
       sceneSetup:
-        'The terrain shifts across calcified ridges in a slow, viscous wave—liquid stone suspended between fluidity and seizure under subterranean magnetic currents. Embedded in the depression lies the WETLINE throat-interface vacuum manifold, gasping with a teeth-grating harmonic.',
+        'Beneath an impossible saffron-yellow sky, the terrain shifts across calcified ridges in a slow, viscous wave—liquid stone suspended between fluidity and seizure under deep subterranean magnetic currents.\n\nHalf-buried in a dark cobalt depression sits the WETLINE throat-interface vacuum manifold, its seized intake shutters gasping on a 4.2-second stutter loop that sends teeth-grating tremors through the surrounding basaltic shoals.',
       intervention:
-        'The operative registers as a cold disturbance in the magnetic gradient. Sinking one knee into the yielding liquid stone, the operative forces a hardened tungsten lever between the vacuum collar and the subterranean intake sleeve, applying measured downward body weight.',
+        'The operative registers first as a quiet shadow crossing the magnetic dune crest in salt-stiffened charcoal composite weave. Sinking one knee into the yielding stone beside the manifold housing, the silent figure slots a hardened tungsten pry-lever between the vacuum collar and its subterranean intake sleeve.\n\nApplying measured, unhurried body weight across the bar, the operative forces the calcified seal past its lock point until trapped sub-surface air rushes in to equalize the chamber.',
       aftermath:
-        'The manifold parts with a dull crack as hydraulic sealants fail and pressure equalizes into silence. The rasping intake dies into permanent stillness as the operative moves laterally across the dune face, leaving the shifting black sands to fill the hollow.',
+        'The seized collar parts with a clean metallic thud, ending the gasping harmonic across Sector 12. Fine ferruginous sand slides gently down the basin walls into unbroken stillness.\n\nWithout pausing beside the quieted machine, the operative traverses the dark basalt ridge and vanishes beyond the saffron horizon.',
     },
     diagnostics: {
       obligationDensity: 'ELEVATED // 89.7%',
@@ -1835,17 +1844,19 @@ export const INITIAL_VAULT_SLATES: ArchivalTelemetrySlate[] = [
     perspective: 'Kip (Low-clearance rat-run survival viewpoint)',
     masterSeedTitle: 'Temporal Displacement: Mesozoic Static',
     stillUrl: './media/s06_log044.jpg',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s06_log044.mp4',
     audioUrl: './media/s06_log044.mp3',
     audioTitle: 'Severance Log 044.mp3',
     driveFolderId: '1ezItJv4TFonYJPG7Ef1_yo3hxq_HVbLi',
     acts: {
       sceneSetup:
-        'Deep within Node AF33, massive techno-organic pine spires thrum above a sub-surface vapor-recovery gallery. Luminous blue sap bleeds across the basalt steps as a multi-ton rusted hydraulic bulkhead grinds downward, threatening to seal Kip inside the lower rat-run.',
+        'Deep within Node AF33, towering techno-organic pine spires glazed with black frost thrum above a subterranean vapor-recovery gallery. Electric-blue bioluminescent sap bleeds through hairline cracks in the cold iron retaining walls, pooling along wet basalt steps.\n\nAhead of Kip’s low-clearance rat-run, a multi-ton rusted hydraulic bulkhead grinds relentlessly downward on ruptured pressure lines, threatening to seal the only warm passage back to the upper terraces.',
       intervention:
-        'The operative slides beneath the descending hydraulic bulkhead with inches to spare, jamming a heavy steel wedge into the lower pressure relief track to lock the gate’s emergency counterweight.',
+        'Out of the blue-lit condensation sprints a dark figure in a thermal drysuit with wrist-mounted pressure gauges. Dropping low across the slick stone threshold, the operative slides beneath the descending iron teeth of the bulkhead with inches to spare.\n\nRolling onto one shoulder, gloved hands slam a forged steel maintenance wedge straight into the lower relief track and trip the manual counterweight latch before the gate can crush the sill.',
       aftermath:
-        'The grinding hydraulic pistons hiss and equalize into a calm whisper. Kip slips safely through the narrow clearance while the operative vanishes into the frost-glazed timber.',
+        'The screaming hydraulic cylinders hiss once and lock steady, leaving a clean three-foot clearance above the floor. Cold blue sap reflections stop shivering across the puddles.\n\nKip scrambles safely through the stabilized hatch clutching a satchel of salvaged capacitor tokens, turning back just in time to see the operative disappear silently between frost-glazed pine trunks.',
     },
     diagnostics: {
       obligationDensity: 'CRITICAL // 95.5%',
@@ -1875,17 +1886,19 @@ export const INITIAL_VAULT_SLATES: ArchivalTelemetrySlate[] = [
     perspective: 'Sentry Alpha-Zero (Autonomous thermal targeting scan)',
     masterSeedTitle: 'The Echo-Chamber Maw',
     stillUrl: './media/s07_chartreuse.jpg',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s07_chartreuse.mp4',
     audioUrl: './media/s07_chartreuse.mp3',
     audioTitle: 'Sub-Sector 4 Incident (1).mp3',
     driveFolderId: '1AzfLYgPoF-ArASA1oHAz3Bw9H2vk3PHX',
     acts: {
       sceneSetup:
-        'Black tar waters bubble inside the porous limestone trench, glowing with radioactive chartreuse spores. Sentry Unit Alpha-Zero paces the perimeter ledge, its autonomous thermal search beam sweeping across the petrified root arches.',
+        'Black tar waters bubble inside the porous limestone cavern of the Chitinous Trench, lit from below by drifts of radioactive chartreuse spores clinging to petrified root arches.\n\nAlong the upper basalt ledge, four-legged Sentry Unit Alpha-Zero paces an endless false-positive patrol loop, its harsh thermal search beam whipping across empty rock walls as corrupted perimeter markers keep re-triggering its siren.',
       intervention:
-        'Standing at the cavern threshold in an ash-grey insulated poncho and mirrored dome visor, the operative kneels on the basalt shelf and inscribes luminescent chalk boundary marks along the sealed perimeter wall.',
+        'Standing calm at the cavern threshold in an ash-grey insulated poncho and mirrored dome visor, the operative waits for the search beam to sweep past before stepping onto the narrow basalt shelf.\n\nKneeling beside the eroded stone sill, the operative draws a heavy industrial mineral-chalk stick from their belt and re-inscribes clean luminescent calibration marks along the entire perimeter seam.',
       aftermath:
-        'Sentry Alpha-Zero’s targeting optics register the boundary calibration and power down their search beam into standby mode. The tar settles into glass-smooth stillness as the operative steps back into the mist.',
+        'On its next sweep, Sentry Alpha-Zero’s optical array reads the restored boundary geometry, chimes softly in recognition, and folds its thermal spotlight down into quiet standby.\n\nBelow the arch, the bubbling tar settles into glass-smooth chartreuse reflections while the operative steps backward into the swamp mist unseen.',
     },
     diagnostics: {
       obligationDensity: 'CRITICAL // 92.8%',
@@ -1915,17 +1928,19 @@ export const INITIAL_VAULT_SLATES: ArchivalTelemetrySlate[] = [
     perspective: 'Unit 12-Bypass (Strain channel 04-B telemetry feed)',
     masterSeedTitle: 'The Sunken Kilobyte Sea',
     stillUrl: './media/s08_phase46.jpg',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s08_phase46.mp4',
     audioUrl: './media/s08_phase46.mp3',
     audioTitle: 'Event_ Absolute Filtration.mp3',
     driveFolderId: '1QYgMEr348BIGsEDeVh3boCjEHKMuSMjM',
     acts: {
       sceneSetup:
-        'Strain channel 04-B registers 842 kilopascals across the thoracic struts as a 38-Hertz sub-bass resonance rattles the conduit vault. Thirty meters out on the wet catwalk, Asha gouges an iron stylus into beeswax with her brass sextant, charting coordinates the bedrock is already forgetting.',
+        'Strain channel 04-B registers 842 kilopascals across the thoracic struts as a relentless 38-Hertz sub-bass resonance rattles the subterranean conduit vault. Viscous amber oil drips from rust-bloomed manifolds into dark drainage cisterns below.\n\nThirty meters out on the wet catwalk, field cartographer Asha braces her elbow against the vibrating rail, gouging coordinates into beeswax tablets beside a trembling brass sextant that refuses to hold level.',
       intervention:
-        'The operative steps into the threshold of the lantern light—an opaque silhouette of matte carbon composite and hermetic seals whose absolute filtration unit cycles with a faint, desiccated hiss—and solders the bypassed acoustic dampener circuit on the suspended relay chassis.',
+        'Into the edge of her amber lantern halo steps an opaque silhouette of matte carbon composite and hermetic seals, the absolute filtration pack cycling with a faint, desiccated hiss.\n\nFlipping down a jeweler’s macro loupe over the smooth black visor, the operative steadies the suspended relay drone chassis with one hand and solders the severed acoustic dampener bridge cleanly back across its copper pads.',
       aftermath:
-        'The 38-Hertz hum dissolves, dropping the vault into abrupt, deadened stillness. Asha’s hand arrests mid-stroke over the wax tablet as the air pressure equalizes, leaving the telemetry feed uncoupled in quiet equilibrium.',
+        'The 38-Hertz sub-bass hum dissolves instantaneously, dropping the entire cistern vault into deep, velvet stillness. Oil droplets fall straight and unshaken into the water below.\n\nAsha’s stylus pauses mid-stroke over smooth wax as her brass horizon mirror finally settles dead-level—and when she looks up from the sextant, the catwalk ahead is already empty.',
     },
     diagnostics: {
       obligationDensity: 'CRITICAL // 97.3%',
@@ -1955,17 +1970,19 @@ export const INITIAL_VAULT_SLATES: ArchivalTelemetrySlate[] = [
     perspective: 'The Dock Master (Harbor mooring line tension monitor)',
     masterSeedTitle: 'The Echo Chasm',
     stillUrl: './media/s09_basalt.jpg',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s09_basalt.mp4',
     audioUrl: './media/s09_basalt.mp3',
     audioTitle: 'Basalt Cable Severance.mp3',
     driveFolderId: '10aZ9wvjEltZsuBZC1UGj1G900442GXqJ',
     acts: {
       sceneSetup:
-        'Along the freezing basalt stone docks of Node AA, solidified salt crusts vibrate beneath the geothermal wellhead enclosure. The Dock Master strains against seized cable hoists where pressure gauges sit locked in the red zone.',
+        'Along the freezing basalt stone docks of Node AA, vitrified salt crusts hum beneath low-pressure sodium vapor lamps cutting through coastal soot. Inside the geothermal wellhead enclosure, main harbor mooring cables groan taut as violin strings over dark tidewater.\n\nThe grizzled Dock Master throws his shoulder repeatedly against the manual drum brake, watching every analog tension dial sit pinned in crimson overload while an electromagnetic brake lock refuses to disengage.',
       intervention:
-        'Stepping through the sodium-vapor mist, the operative opens the main junction box and peels the charred insulation off the overloaded power bus-bars with insulated pliers, releasing the magnetic lock on the harbor winch.',
+        'Out of the salt spray steps the operative in a rough burlap smock tied with frayed mooring cord over a featureless dark visor. Unclipping heavy insulated lineman’s pliers, the silent figure pries open the frosted main junction cabinet beside the winch drum.\n\nWorking inches from live arcs, gloved hands peel charred insulation off the fused copper bus-bars and clear the shorted magnetic clutch contact in three clean pulls.',
       aftermath:
-        'The hoist pressure gauges drop out of the red zone into silent equilibrium as the tension lines slacken. The operative fades back into the twilight surf along the basalt pier.',
+        'With a deep metallic clunk, the harbor winch brake releases and the screaming mooring cables slacken gently into safe harbor tension. Every gauge needle along the pier drops smoothly out of the red.\n\nThe Dock Master lets go of the brake wheel and exhales white vapor into the cold twilight—alone on the basalt pier save for gentle tidewash lapping against the stone.',
     },
     diagnostics: {
       obligationDensity: 'HIGH // 91.6%',

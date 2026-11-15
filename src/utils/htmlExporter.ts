@@ -87,8 +87,12 @@ export async function exportStandaloneWebpageHtml(
     if (dataUri) encodedGallery.push(dataUri)
   }
 
-  onProgress?.('Packing 9:16 Loop...')
-  const encodedGif = await urlToDataUri(slate.gifUrl)
+  onProgress?.('Packing 2x Story GIFs...')
+  const encodedGif1 = await urlToDataUri(slate.gifUrl)
+  const encodedGif2 =
+    slate.gifUrl2 && slate.gifUrl2 !== slate.gifUrl
+      ? await urlToDataUri(slate.gifUrl2)
+      : encodedGif1
 
   onProgress?.('Packing 1080p Cinema...')
   const encodedVideo = await urlToDataUri(slate.videoUrl)
@@ -97,6 +101,36 @@ export async function exportStandaloneWebpageHtml(
   const encodedAudio = await urlToDataUri(slate.audioUrl)
 
   onProgress?.('Printing Standalone Zine...')
+
+  const renderGifBlockHtml = (
+    gifData: string | null,
+    fallbackImg: string,
+    badge: string,
+    badgeBg: string,
+    badgeInk: string,
+    caption: string,
+    rot: string
+  ) => {
+    const mediaInner = gifData
+      ? gifData.startsWith('data:video/')
+        ? `<video src="${gifData}" autoplay loop muted playsinline class="w-full h-auto max-h-[520px] object-contain block"></video>`
+        : `<img src="${gifData}" alt="${escapeHtml(badge)}" class="w-full h-auto max-h-[520px] object-contain block" />`
+      : fallbackImg
+      ? `<img src="${fallbackImg}" alt="${escapeHtml(badge)}" class="w-full h-auto max-h-[420px] object-cover block" />`
+      : ''
+    return `
+      <div style="transform: rotate(${rot});" class="relative pop-card th-surface p-4 flex flex-col justify-between hover:!rotate-0 transition-transform">
+        <div class="washi-tape absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 rounded-sm -rotate-2"></div>
+        <div class="flex items-center justify-between pb-2.5">
+          <span class="px-3 py-1 rounded-full border-2 th-border font-mono text-xs font-bold uppercase" style="background:${badgeBg}; color:${badgeInk}">${escapeHtml(badge)}</span>
+          <span class="font-mono text-[11px] font-bold">★ LIVE GIF LOOP</span>
+        </div>
+        <div class="relative w-full rounded-2xl border-[3px] th-border bg-[#121212] overflow-hidden flex items-center justify-center">
+          ${mediaInner}
+          <div class="absolute bottom-3 right-3 px-3 py-1 rounded-full border-2 th-border font-mono text-[10px] font-bold uppercase -rotate-2" style="background:${expTheme.popLime}; color:${expTheme.popLimeInk}">${escapeHtml(caption)}</div>
+        </div>
+      </div>`
+  }
 
   const shotLabels = [
     { badge: '🌍 SHOT 01 // WIDE WORLD', note: 'Establishing Scale' },
@@ -182,7 +216,53 @@ export async function exportStandaloneWebpageHtml(
   ${encodedAudio ? `<audio id="zineAudio" src="${encodedAudio}"></audio>` : ''}
 
   <main class="max-w-7xl mx-auto space-y-10">
-    <!-- MAGAZINE COVER MASTHEAD -->
+    <!-- 1. HERO LEAD: FULL-WIDTH 1080P WIDESCREEN CINEMA + VINYL SOUNDTRACK -->
+    <section class="space-y-5">
+      <div class="pop-card th-surface overflow-hidden">
+        <div class="px-4 py-2.5 border-b-[3px] th-border flex items-center justify-between" style="background:${expTheme.popCyan}; color:${expTheme.popCyanInk}">
+          <div class="flex items-center gap-2">
+            <span class="w-3.5 h-3.5 rounded-full bg-[#FF2A85] border-2 border-[#121212]"></span>
+            <span class="w-3.5 h-3.5 rounded-full bg-[#FFE600] border-2 border-[#121212]"></span>
+            <span class="w-3.5 h-3.5 rounded-full bg-[#B8FF00] border-2 border-[#121212]"></span>
+            <span class="font-mono text-xs font-bold uppercase ml-1">🎬 FEATURE PRESENTATION // 1080P HERO CINEMA</span>
+          </div>
+          <button onclick="const v=document.getElementById('heroVid'); if(v&&v.requestFullscreen) v.requestFullscreen();" class="px-2.5 py-1 rounded-lg border-2 th-border th-elevated font-mono text-[11px] font-bold uppercase cursor-pointer">
+            FULLSCREEN ⤢
+          </button>
+        </div>
+        <div class="relative aspect-video w-full bg-[#121212] overflow-hidden">
+          ${
+            encodedVideo
+              ? `<video id="heroVid" src="${encodedVideo}" ${heroImg ? `poster="${heroImg}"` : ''} autoplay loop muted playsinline controls class="w-full h-full object-cover"></video>`
+              : heroImg
+              ? `<img id="heroVid" src="${heroImg}" class="w-full h-full object-cover" />`
+              : `<div class="w-full h-full flex items-center justify-center text-white font-mono">NO VIDEO STREAM</div>`
+          }
+        </div>
+      </div>
+
+      <!-- VINYL BOOMBOX SOUNDTRACK -->
+      <div class="pop-card p-5 flex flex-col sm:flex-row items-center gap-4" style="background:${expTheme.tile2}; color:${expTheme.ink}">
+        <div class="flex items-center gap-3 shrink-0">
+          <button id="playBtn" onclick="toggleSong()" class="pop-btn px-5 py-3 font-display font-extrabold text-sm uppercase cursor-pointer" style="background:${expTheme.popPink}; color:${expTheme.popPinkInk}">
+            ▶ PLAY SONG
+          </button>
+          <div id="vinylDisc" class="w-11 h-11 rounded-full border-[3px] th-border bg-[#121212] flex items-center justify-center">
+            <div class="w-4 h-4 rounded-full border-2 border-[#121212]" style="background:${expTheme.heroYellow}"></div>
+          </div>
+        </div>
+        <div class="flex-1 w-full min-w-0 space-y-1.5">
+          <div class="flex justify-between text-xs font-bold">
+            <span class="truncate">🎵 ${escapeHtml(slate.audioTitle || 'Cyber-Noir Synthwave Track')}</span>
+            <span id="songClock" class="font-mono text-[11px]">0:00</span>
+          </div>
+          <input id="songSeek" type="range" min="0" max="100" value="0" step="0.1" style="accent-color:${expTheme.popPink}" class="w-full cursor-pointer" />
+        </div>
+        <canvas id="specCanvas" width="150" height="42" style="background:${expTheme.inputBg}" class="w-[150px] h-[42px] rounded-xl border-2 th-border p-1 shrink-0"></canvas>
+      </div>
+    </section>
+
+    <!-- 2. MAGAZINE COVER MASTHEAD -->
     <header class="relative pop-card p-6 sm:p-9 overflow-hidden" style="background:${expTheme.mastheadBg}; color:${expTheme.ink}">
       <div class="pointer-events-none absolute -right-12 -top-12 w-52 h-52 rounded-full border-[3px] th-border" style="background:${expTheme.popPink}"></div>
       <div class="pointer-events-none absolute right-24 -bottom-10 w-28 h-28 rounded-full border-[3px] th-border" style="background:${expTheme.popCyan}"></div>
@@ -218,114 +298,42 @@ export async function exportStandaloneWebpageHtml(
       </div>
     </header>
 
-    <!-- ASYMMETRIC KINETIC MEDIA WALL -->
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-stretch">
-      <div class="lg:col-span-8 flex flex-col justify-between gap-6">
-        <div class="pop-card th-surface overflow-hidden">
-          <div class="px-4 py-2.5 border-b-[3px] th-border flex items-center justify-between" style="background:${expTheme.popCyan}; color:${expTheme.popCyanInk}">
-            <div class="flex items-center gap-2">
-              <span class="w-3.5 h-3.5 rounded-full bg-[#FF2A85] border-2 border-[#121212]"></span>
-              <span class="w-3.5 h-3.5 rounded-full bg-[#FFE600] border-2 border-[#121212]"></span>
-              <span class="w-3.5 h-3.5 rounded-full bg-[#B8FF00] border-2 border-[#121212]"></span>
-              <span class="font-mono text-xs font-bold uppercase ml-1">🎬 1080P WIDESCREEN CINEMA DECK</span>
-            </div>
-            <button onclick="const v=document.getElementById('heroVid'); if(v&&v.requestFullscreen) v.requestFullscreen();" class="px-2.5 py-1 rounded-lg border-2 th-border th-elevated font-mono text-[11px] font-bold uppercase cursor-pointer">
-              FULLSCREEN ⤢
-            </button>
-          </div>
-          <div class="relative aspect-video w-full bg-[#121212] overflow-hidden">
-            ${
-              encodedVideo
-                ? `<video id="heroVid" src="${encodedVideo}" ${heroImg ? `poster="${heroImg}"` : ''} autoplay loop muted playsinline controls class="w-full h-full object-cover"></video>`
-                : heroImg
-                ? `<img id="heroVid" src="${heroImg}" class="w-full h-full object-cover" />`
-                : `<div class="w-full h-full flex items-center justify-center text-white font-mono">NO VIDEO STREAM</div>`
-            }
-          </div>
-        </div>
-
-        <!-- VINYL BOOMBOX SOUNDTRACK -->
-        <div class="pop-card p-5 flex flex-col sm:flex-row items-center gap-4" style="background:${expTheme.tile2}; color:${expTheme.ink}">
-          <div class="flex items-center gap-3 shrink-0">
-            <button id="playBtn" onclick="toggleSong()" class="pop-btn px-5 py-3 font-display font-extrabold text-sm uppercase cursor-pointer" style="background:${expTheme.popPink}; color:${expTheme.popPinkInk}">
-              ▶ PLAY SONG
-            </button>
-            <div id="vinylDisc" class="w-11 h-11 rounded-full border-[3px] th-border bg-[#121212] flex items-center justify-center">
-              <div class="w-4 h-4 rounded-full border-2 border-[#121212]" style="background:${expTheme.heroYellow}"></div>
-            </div>
-          </div>
-          <div class="flex-1 w-full min-w-0 space-y-1.5">
-            <div class="flex justify-between text-xs font-bold">
-              <span class="truncate">🎵 ${escapeHtml(slate.audioTitle || 'Cyber-Noir Synthwave Track')}</span>
-              <span id="songClock" class="font-mono text-[11px]">0:00</span>
-            </div>
-            <input id="songSeek" type="range" min="0" max="100" value="0" step="0.1" style="accent-color:${expTheme.popPink}" class="w-full cursor-pointer" />
-          </div>
-          <canvas id="specCanvas" width="150" height="42" style="background:${expTheme.inputBg}" class="w-[150px] h-[42px] rounded-xl border-2 th-border p-1 shrink-0"></canvas>
-        </div>
-      </div>
-
-      <!-- 9:16 VERTICAL KINETIC LOOP -->
-      <div class="lg:col-span-4 flex flex-col">
-        <div class="relative flex-1 pop-card th-surface p-4 flex flex-col justify-between lg:rotate-[1.2deg]">
-          <div class="washi-tape absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 rounded-sm -rotate-2"></div>
-          <div class="flex items-center justify-between pb-3">
-            <span class="px-3 py-1 rounded-full border-2 th-border font-mono text-xs font-bold uppercase" style="background:${expTheme.popPink}; color:${expTheme.popPinkInk}">
-              📱 9:16 KINETIC LOOP
-            </span>
-            <span class="font-mono text-[11px] font-bold">★ LIVE</span>
-          </div>
-          <div class="relative aspect-[9/16] w-full rounded-2xl border-[3px] th-border bg-[#121212] overflow-hidden">
-            ${
-              encodedGif
-                ? encodedGif.startsWith('data:video/')
-                  ? `<video src="${encodedGif}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>`
-                  : `<img src="${encodedGif}" alt="9:16 Loop" class="w-full h-full object-cover" />`
-                : heroImg
-                ? `<img src="${heroImg}" alt="Portrait" class="w-full h-full object-cover" />`
-                : ''
-            }
-            <div class="absolute bottom-3 right-3 px-3 py-1 rounded-full border-2 th-border font-mono text-[10px] font-bold uppercase -rotate-2" style="background:${expTheme.popLime}; color:${expTheme.popLimeInk}">
-              LOOPING ∞
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- KINETIC MARQUEE -->
     <div class="pop-card py-2.5 overflow-hidden" style="background:${expTheme.tickerBg}; color:${expTheme.heroYellow}">
       <div class="marquee-track font-mono text-xs sm:text-sm font-bold uppercase tracking-widest">
-        <span class="mx-6">★ 3-ACT GRAPHIC CHRONICLE ★ 4 DISTINCT CAMERA SHOTS ★ ${escapeHtml(slate.actPhase)} ★ ${escapeHtml(slate.lightingStyle)} ★</span>
-        <span class="mx-6">★ 3-ACT GRAPHIC CHRONICLE ★ 4 DISTINCT CAMERA SHOTS ★ ${escapeHtml(slate.actPhase)} ★ ${escapeHtml(slate.lightingStyle)} ★</span>
+        <span class="mx-6">★ LONG-FORM 3-ACT CHRONICLE ★ 2 LIVE STORY GIF LOOPS ★ 4 DISTINCT CAMERA SHOTS ★ ${escapeHtml(slate.actPhase)} ★</span>
+        <span class="mx-6">★ LONG-FORM 3-ACT CHRONICLE ★ 2 LIVE STORY GIF LOOPS ★ 4 DISTINCT CAMERA SHOTS ★ ${escapeHtml(slate.actPhase)} ★</span>
       </div>
     </div>
 
-    <!-- SPREAD 01 -->
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
-      <article class="lg:col-span-5 pop-card p-6 sm:p-8" style="background:${expTheme.tile1}; color:${expTheme.ink}">
+    <!-- SPREAD 01: ACT I + STORY GIF #1 + SHOT 01 -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+      <article class="lg:col-span-6 pop-card p-6 sm:p-8" style="background:${expTheme.tile1}; color:${expTheme.ink}">
         <span class="inline-block px-3 py-1 rounded-full border-2 th-border font-mono text-xs font-bold uppercase mb-3" style="background:${expTheme.heroYellow}; color:${expTheme.heroYellowInk}">ACT 01 // THE SETUP</span>
-        <h2 class="font-display text-2xl sm:text-3xl font-extrabold uppercase mb-3">Entering ${escapeHtml(slate.environmentBiome)}</h2>
-        <p class="text-base sm:text-[17px] leading-relaxed font-medium whitespace-pre-line">${escapeHtml(slate.acts.sceneSetup)}</p>
+        <h2 class="font-display text-2xl sm:text-3xl font-extrabold uppercase mb-4">Entering ${escapeHtml(slate.environmentBiome)}</h2>
+        <p class="text-base sm:text-[17px] leading-[1.75] font-medium whitespace-pre-line">${escapeHtml(slate.acts.sceneSetup)}</p>
       </article>
-      ${
-        encodedGallery[0]
-          ? `<div onclick="openLightbox(0)" class="lg:col-span-7 pop-card th-surface p-4 cursor-pointer lg:rotate-[1deg] hover:rotate-0 transition-transform">
-              <div class="aspect-[16/10] rounded-xl border-2 th-border overflow-hidden bg-[#121212]">
-                <img src="${encodedGallery[0]}" class="w-full h-full object-cover" />
-              </div>
-              <div class="pt-3 flex justify-between items-center">
-                <span class="px-3 py-1 rounded-full border-2 th-border font-mono text-xs font-bold uppercase" style="background:${expTheme.popCyan}; color:${expTheme.popCyanInk}">🌍 SHOT 01 // WIDE ESTABLISHING</span>
-                <span class="font-mono text-xs font-bold underline">Pop Open 2K ⤢</span>
-              </div>
-            </div>`
-          : ''
-      }
+      <div class="lg:col-span-6 space-y-6">
+        ${renderGifBlockHtml(encodedGif1, heroImg, '🎞️ STORY GIF 01 // ACT I TENSION LOOP', expTheme.popPink, expTheme.popPinkInk, 'ACT I MOTION ∞', '0.8deg')}
+        ${
+          encodedGallery[0]
+            ? `<div onclick="openLightbox(0)" class="pop-card th-surface p-4 cursor-pointer hover:rotate-0 transition-transform">
+                <div class="aspect-[16/10] rounded-xl border-2 th-border overflow-hidden bg-[#121212]">
+                  <img src="${encodedGallery[0]}" class="w-full h-full object-cover" />
+                </div>
+                <div class="pt-3 flex justify-between items-center">
+                  <span class="px-3 py-1 rounded-full border-2 th-border font-mono text-xs font-bold uppercase" style="background:${expTheme.popCyan}; color:${expTheme.popCyanInk}">🌍 SHOT 01 // WIDE ESTABLISHING</span>
+                  <span class="font-mono text-xs font-bold underline">Pop Open 2K ⤢</span>
+                </div>
+              </div>`
+            : ''
+        }
+      </div>
     </section>
 
-    <!-- SPREAD 02 -->
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
-      <div class="lg:col-span-7 space-y-5 order-2 lg:order-1">
+    <!-- SPREAD 02: SHOT 02 + SHOT 03 + ACT II -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+      <div class="lg:col-span-6 space-y-5 order-2 lg:order-1">
         ${
           encodedGallery[1]
             ? `<div onclick="openLightbox(1)" class="pop-card th-surface p-4 cursor-pointer lg:-rotate-[1deg] hover:rotate-0 transition-transform">
@@ -341,7 +349,7 @@ export async function exportStandaloneWebpageHtml(
         }
         ${
           encodedGallery[2]
-            ? `<div onclick="openLightbox(2)" class="sm:w-4/5 sm:ml-auto pop-card th-surface p-3 cursor-pointer lg:rotate-[1.5deg] hover:rotate-0 transition-transform">
+            ? `<div onclick="openLightbox(2)" class="sm:w-11/12 sm:ml-auto pop-card th-surface p-3 cursor-pointer lg:rotate-[1.2deg] hover:rotate-0 transition-transform">
                 <div class="aspect-[16/9] rounded-xl border-2 th-border overflow-hidden bg-[#121212]">
                   <img src="${encodedGallery[2]}" class="w-full h-full object-cover" />
                 </div>
@@ -353,11 +361,11 @@ export async function exportStandaloneWebpageHtml(
             : ''
         }
       </div>
-      <div class="lg:col-span-5 space-y-6 order-1 lg:order-2">
+      <div class="lg:col-span-6 space-y-6 order-1 lg:order-2">
         <article class="pop-card p-6 sm:p-8" style="background:${expTheme.tile2}; color:${expTheme.ink}">
           <span class="inline-block px-3 py-1 rounded-full border-2 th-border font-mono text-xs font-bold uppercase mb-3" style="background:${expTheme.popPink}; color:${expTheme.popPinkInk}">ACT 02 // THE INTERVENTION</span>
-          <h2 class="font-display text-2xl sm:text-3xl font-extrabold uppercase mb-3">${escapeHtml(slate.action)}</h2>
-          <p class="text-base sm:text-[17px] leading-relaxed font-medium whitespace-pre-line">${escapeHtml(slate.acts.intervention)}</p>
+          <h2 class="font-display text-2xl sm:text-3xl font-extrabold uppercase mb-4">${escapeHtml(slate.action)}</h2>
+          <p class="text-base sm:text-[17px] leading-[1.75] font-medium whitespace-pre-line">${escapeHtml(slate.acts.intervention)}</p>
         </article>
         <div class="pop-card th-surface p-5 space-y-2.5 text-xs">
           <div class="font-display text-lg font-extrabold uppercase">🏷️ Zine Field Notes</div>
@@ -368,26 +376,29 @@ export async function exportStandaloneWebpageHtml(
       </div>
     </section>
 
-    <!-- SPREAD 03 -->
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
-      <article class="lg:col-span-5 pop-card p-6 sm:p-8" style="background:${expTheme.tile3}; color:${expTheme.ink}">
+    <!-- SPREAD 03: ACT III + STORY GIF #2 + SHOT 04 -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+      <article class="lg:col-span-6 pop-card p-6 sm:p-8" style="background:${expTheme.tile3}; color:${expTheme.ink}">
         <span class="inline-block px-3 py-1 rounded-full border-2 th-border font-mono text-xs font-bold uppercase mb-3" style="background:${expTheme.popLime}; color:${expTheme.popLimeInk}">ACT 03 // EQUILIBRIUM</span>
-        <h2 class="font-display text-2xl sm:text-3xl font-extrabold uppercase mb-3">The Quiet Aftermath</h2>
-        <p class="text-base sm:text-[17px] leading-relaxed font-medium whitespace-pre-line">${escapeHtml(slate.acts.aftermath)}</p>
+        <h2 class="font-display text-2xl sm:text-3xl font-extrabold uppercase mb-4">The Quiet Aftermath</h2>
+        <p class="text-base sm:text-[17px] leading-[1.75] font-medium whitespace-pre-line">${escapeHtml(slate.acts.aftermath)}</p>
       </article>
-      ${
-        encodedGallery[3]
-          ? `<div onclick="openLightbox(3)" class="lg:col-span-7 pop-card th-surface p-4 cursor-pointer lg:rotate-[0.9deg] hover:rotate-0 transition-transform">
-              <div class="aspect-[16/10] rounded-xl border-2 th-border overflow-hidden bg-[#121212]">
-                <img src="${encodedGallery[3]}" class="w-full h-full object-cover" />
-              </div>
-              <div class="pt-3 flex justify-between items-center">
-                <span class="px-3 py-1 rounded-full border-2 th-border font-mono text-xs font-bold uppercase" style="background:${expTheme.popLime}; color:${expTheme.popLimeInk}">🌅 SHOT 04 // QUIET AFTERMATH</span>
-                <span class="font-mono text-xs font-bold underline">Pop Open 2K ⤢</span>
-              </div>
-            </div>`
-          : ''
-      }
+      <div class="lg:col-span-6 space-y-6">
+        ${renderGifBlockHtml(encodedGif2, encodedGallery[3] || heroImg, '🎞️ STORY GIF 02 // ACT III AFTERMATH LOOP', expTheme.popCyan, expTheme.popCyanInk, 'ACT III MOTION ∞', '-0.8deg')}
+        ${
+          encodedGallery[3]
+            ? `<div onclick="openLightbox(3)" class="pop-card th-surface p-4 cursor-pointer hover:rotate-0 transition-transform">
+                <div class="aspect-[16/10] rounded-xl border-2 th-border overflow-hidden bg-[#121212]">
+                  <img src="${encodedGallery[3]}" class="w-full h-full object-cover" />
+                </div>
+                <div class="pt-3 flex justify-between items-center">
+                  <span class="px-3 py-1 rounded-full border-2 th-border font-mono text-xs font-bold uppercase" style="background:${expTheme.popLime}; color:${expTheme.popLimeInk}">🌅 SHOT 04 // QUIET AFTERMATH</span>
+                  <span class="font-mono text-xs font-bold underline">Pop Open 2K ⤢</span>
+                </div>
+              </div>`
+            : ''
+        }
+      </div>
     </section>
 
     <!-- POLAROID CONTACT SHEET -->

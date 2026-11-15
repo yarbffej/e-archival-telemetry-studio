@@ -50,7 +50,7 @@ import {
   compileAllFourPrompts,
   parsePastedStoryToActs,
 } from './utils/promptCompiler'
-import { generateInAppStory } from './utils/storyForge'
+import { generateInAppStory, generateBuiltInStory } from './utils/storyForge'
 import { exportStandaloneWebpageHtml } from './utils/htmlExporter'
 import { soundEngine } from './utils/soundEngine'
 
@@ -66,7 +66,8 @@ const BUNDLED_MEDIA_POOL = [
       './media/s01_walter_3.jpg',
       './media/s01_walter_4.jpg',
     ],
-    gifUrl: './media/sample_916.gif',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s01_walter.mp4',
     audioUrl: './media/s01_walter.mp3',
     audioTitle: 'Solvent and Steel (Take 2).mp3',
@@ -79,7 +80,8 @@ const BUNDLED_MEDIA_POOL = [
       './media/s02_iron_chapel_3.jpg',
       './media/s02_iron_chapel_4.jpg',
     ],
-    gifUrl: './media/sample_916.gif',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s02_iron_chapel.mp4',
     audioUrl: './media/s02_iron_chapel.mp3',
     audioTitle: 'The Iron Chapel Report.mp3',
@@ -92,7 +94,8 @@ const BUNDLED_MEDIA_POOL = [
       './media/s06_log044.jpg',
       './media/s08_phase46.jpg',
     ],
-    gifUrl: './media/sample_916.gif',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s03_aris.mp4',
     audioUrl: './media/s03_aris.mp3',
     audioTitle: 'Silent Lines.mp3',
@@ -105,7 +108,8 @@ const BUNDLED_MEDIA_POOL = [
       './media/s05_golden_tether.jpg',
       './media/s09_basalt.jpg',
     ],
-    gifUrl: './media/sample_916.gif',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s04_tuning_blade.mp4',
     audioUrl: './media/s04_tuning_blade.mp3',
     audioTitle: 'Industrial Resonance Archive.mp3',
@@ -118,7 +122,8 @@ const BUNDLED_MEDIA_POOL = [
       './media/s07_chartreuse.jpg',
       './media/s09_basalt.jpg',
     ],
-    gifUrl: './media/sample_916.gif',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s05_golden_tether.mp4',
     audioUrl: './media/s05_golden_tether.mp3',
     audioTitle: 'Substation Telemetry.mp3',
@@ -131,7 +136,8 @@ const BUNDLED_MEDIA_POOL = [
       './media/s02_iron_chapel_3.jpg',
       './media/s08_phase46.jpg',
     ],
-    gifUrl: './media/sample_916.gif',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s06_log044.mp4',
     audioUrl: './media/s06_log044.mp3',
     audioTitle: 'Field Chronicle 044.mp3',
@@ -144,7 +150,8 @@ const BUNDLED_MEDIA_POOL = [
       './media/s03_aris.jpg',
       './media/s09_basalt.jpg',
     ],
-    gifUrl: './media/sample_916.gif',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s07_chartreuse.mp4',
     audioUrl: './media/s07_chartreuse.mp3',
     audioTitle: 'Sub-Sector 4 Incident (1).mp3',
@@ -157,7 +164,8 @@ const BUNDLED_MEDIA_POOL = [
       './media/s06_log044.jpg',
       './media/s04_tuning_blade.jpg',
     ],
-    gifUrl: './media/sample_916.gif',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s08_phase46.mp4',
     audioUrl: './media/s08_phase46.mp3',
     audioTitle: 'Event_ Absolute Filtration.mp3',
@@ -170,7 +178,8 @@ const BUNDLED_MEDIA_POOL = [
       './media/s05_golden_tether.jpg',
       './media/s01_walter_3.jpg',
     ],
-    gifUrl: './media/sample_916.gif',
+    gifUrl: './media/story_loop_1.gif',
+    gifUrl2: './media/story_loop_2.gif',
     videoUrl: './media/s09_basalt.mp4',
     audioUrl: './media/s09_basalt.mp3',
     audioTitle: 'Basalt Conduit Lockout.mp3',
@@ -213,7 +222,7 @@ function buildSlateFromPhase(
 
   const densityVal = (88 + ((phase.index * 7.3) % 11.8)).toFixed(1)
 
-  return {
+  const baseSlate: ArchivalTelemetrySlate = {
     id: `SLATE_P${String(phase.index).padStart(2, '0')}_${Date.now().toString(36)}`,
     title: phase.actPhase.replace(/^Phase \d+:\s*/i, '').toUpperCase(),
     nodeTag:
@@ -242,20 +251,30 @@ function buildSlateFromPhase(
     stillUrl: media.stillUrl,
     galleryUrls: media.galleryUrls,
     gifUrl: media.gifUrl,
+    gifUrl2: media.gifUrl2,
     videoUrl: media.videoUrl,
     audioUrl: media.audioUrl,
     audioTitle: media.audioTitle,
     driveFolderId: phase.archiveFolderId,
     acts: {
-      sceneSetup: `Within ${phase.environmentBiome} (${phase.biome}), ${phase.encounterTarget} operates under heavy atmospheric and mechanical pressure. Observed via ${phase.perspective} under ${phase.lightingStyle.toLowerCase()}, the surrounding infrastructure hums with unresolved system load.`,
-      intervention: `Framed in ${phase.cameraAngle.toLowerCase()}, the masked operative (${phase.attire}) moves into position and executes a deliberate physical intervention: ${phase.action.toLowerCase()}.`,
-      aftermath: `The mechanical and environmental strain subsides into quiet stillness. The operative departs into the shadows without looking back, leaving ${phase.environmentBiome.toLowerCase()} in stabilized equilibrium.`,
+      sceneSetup: '',
+      intervention: '',
+      aftermath: '',
     },
     diagnostics: {
       obligationDensity: `CRITICAL // ${densityVal}%`,
       severanceDepth: 'ABSOLUTE // 432Hz',
       absenceRadius: `EXPANDING // ${(14 + (phase.index % 35)).toFixed(1)}m`,
       cleanseEfficiency: '100.00% (ANOMALOUS)',
+    },
+  }
+  const builtStory = generateBuiltInStory(baseSlate, 0)
+  return {
+    ...baseSlate,
+    acts: {
+      sceneSetup: builtStory.sceneSetup,
+      intervention: builtStory.intervention,
+      aftermath: builtStory.aftermath,
     },
   }
 }
@@ -756,16 +775,18 @@ export default function App() {
     }))
   }
 
-  // Drop All 7 Files at Once in Step 3
+  // Drop All 8 Files at Once in Step 3 (4x 2K Shots + 2x Story GIFs + 16:9 Lead Video + Song)
   const handleFilesSelected = async (
     files: FileList | null,
-    forcedSlot?: 'gallery' | 'gif' | 'video' | 'audio'
+    forcedSlot?: 'gallery' | 'gif1' | 'gif2' | 'video' | 'audio'
   ) => {
     if (!files || files.length === 0) return
     soundEngine.triggerTuningBladeChime('normal')
 
     const droppedStaticImages: string[] = []
-    let nextGifUrl: string | undefined
+    const droppedGifs: string[] = []
+    let nextGif1Url: string | undefined
+    let nextGif2Url: string | undefined
     let nextVideoUrl: string | undefined
     let nextAudioUrl: string | undefined
     let nextAudioTitle: string | undefined
@@ -777,19 +798,29 @@ export default function App() {
       const url = URL.createObjectURL(file)
       const lower = file.name.toLowerCase()
 
-      if (forcedSlot === 'gif') {
+      if (forcedSlot === 'gif1') {
         const isVid =
           file.type.startsWith('video/') ||
           lower.endsWith('.mp4') ||
           lower.endsWith('.webm')
-        nextGifUrl = isVid ? `${url}#video` : url
-        summaryParts.push('9:16 Loop')
+        nextGif1Url = isVid ? `${url}#video` : url
+        summaryParts.push('Story GIF #1')
+        continue
+      }
+
+      if (forcedSlot === 'gif2') {
+        const isVid =
+          file.type.startsWith('video/') ||
+          lower.endsWith('.mp4') ||
+          lower.endsWith('.webm')
+        nextGif2Url = isVid ? `${url}#video` : url
+        summaryParts.push('Story GIF #2')
         continue
       }
 
       if (forcedSlot === 'video') {
         nextVideoUrl = url
-        summaryParts.push('1080p Cinema')
+        summaryParts.push('1080p Lead Video')
         continue
       }
 
@@ -806,8 +837,7 @@ export default function App() {
       }
 
       if (file.type === 'image/gif' || lower.endsWith('.gif')) {
-        nextGifUrl = url
-        summaryParts.push('9:16 GIF')
+        droppedGifs.push(url)
       } else if (
         file.type.startsWith('image/') ||
         lower.endsWith('.jpg') ||
@@ -823,11 +853,10 @@ export default function App() {
       ) {
         const orientation = await probeVideoOrientation(url)
         if (orientation === 'portrait') {
-          nextGifUrl = `${url}#video`
-          summaryParts.push('9:16 Vertical Loop')
+          droppedGifs.push(`${url}#video`)
         } else {
           nextVideoUrl = url
-          summaryParts.push('1080p Cinema')
+          summaryParts.push('1080p Lead Video')
         }
       } else if (
         file.type.startsWith('audio/') ||
@@ -865,7 +894,22 @@ export default function App() {
         patch.stillUrl = mergedGallery[0]
       }
 
-      if (nextGifUrl) patch.gifUrl = nextGifUrl
+      if (droppedGifs.length >= 2) {
+        patch.gifUrl = droppedGifs[0]
+        patch.gifUrl2 = droppedGifs[1]
+      } else if (droppedGifs.length === 1) {
+        if (
+          prev.gifUrl?.startsWith('blob:') &&
+          !prev.gifUrl2?.startsWith('blob:')
+        ) {
+          patch.gifUrl2 = droppedGifs[0]
+        } else {
+          patch.gifUrl = droppedGifs[0]
+        }
+      }
+
+      if (nextGif1Url) patch.gifUrl = nextGif1Url
+      if (nextGif2Url) patch.gifUrl2 = nextGif2Url
       if (nextVideoUrl) patch.videoUrl = nextVideoUrl
       if (nextAudioUrl) {
         patch.audioUrl = nextAudioUrl
@@ -875,6 +919,11 @@ export default function App() {
       return { ...prev, ...patch }
     })
 
+    if (droppedGifs.length > 0) {
+      summaryParts.unshift(
+        `${droppedGifs.length} Story GIF${droppedGifs.length > 1 ? 's' : ''}`
+      )
+    }
     if (droppedStaticImages.length > 0) {
       summaryParts.unshift(
         `${droppedStaticImages.length} Shot${
@@ -987,6 +1036,7 @@ export default function App() {
           stillUrl: syncedGallery[0] || baseSlate.stillUrl,
           galleryUrls: syncedGallery,
           gifUrl: data.gifUrl || baseSlate.gifUrl,
+          gifUrl2: data.gifUrl2 || data.gifUrl || baseSlate.gifUrl2,
           videoUrl: data.videoUrl || baseSlate.videoUrl,
           audioUrl: data.audioUrl || baseSlate.audioUrl,
           audioTitle: data.audioName || baseSlate.audioTitle,
@@ -1105,7 +1155,12 @@ export default function App() {
           const gifUrl = await uploadBlobMediaIfNeeded(
             slate.gifUrl,
             slate.id,
-            'loop'
+            'loop1'
+          )
+          const gifUrl2 = await uploadBlobMediaIfNeeded(
+            slate.gifUrl2,
+            slate.id,
+            'loop2'
           )
           const videoUrl = await uploadBlobMediaIfNeeded(
             slate.videoUrl,
@@ -1122,6 +1177,7 @@ export default function App() {
             stillUrl: still,
             galleryUrls: gallery,
             gifUrl,
+            gifUrl2,
             videoUrl,
             audioUrl,
           }
@@ -1251,13 +1307,13 @@ export default function App() {
         <div className="animate-zine-marquee font-mono-zine text-[11px] font-bold uppercase tracking-widest">
           <span className="mx-6">
             {isReaderMode
-              ? '★ MUTABLE ECHO POCKET ZINE READER ★ TAP ANY ISSUE COVER TO READ ★ 1080P CINEMA • VINYL SONG • 2K POLAROIDS ★'
-              : '★ MUTABLE ECHO POP-ZINE PLAYGROUND ★ SPIN AN IDEA ★ GRAB 4 DISTINCT SHOT PROMPTS ★ DROP ALL 7 FILES ★ PUBLISH TO PHONE ★'}
+              ? '★ MUTABLE ECHO POCKET ZINE READER ★ TAP ANY ISSUE COVER TO READ ★ LEAD 1080P CINEMA • 2 STORY GIFS • VINYL SONG • 2K POLAROIDS ★'
+              : '★ MUTABLE ECHO POP-ZINE PLAYGROUND ★ SPIN AN IDEA ★ GRAB 4 SHOT + 2 GIF PROMPTS ★ DROP ALL 8 FILES ★ PUBLISH TO PHONE ★'}
           </span>
           <span className="mx-6">
             {isReaderMode
-              ? '★ MUTABLE ECHO POCKET ZINE READER ★ TAP ANY ISSUE COVER TO READ ★ 1080P CINEMA • VINYL SONG • 2K POLAROIDS ★'
-              : '★ MUTABLE ECHO POP-ZINE PLAYGROUND ★ SPIN AN IDEA ★ GRAB 4 DISTINCT SHOT PROMPTS ★ DROP ALL 7 FILES ★ PUBLISH TO PHONE ★'}
+              ? '★ MUTABLE ECHO POCKET ZINE READER ★ TAP ANY ISSUE COVER TO READ ★ LEAD 1080P CINEMA • 2 STORY GIFS • VINYL SONG • 2K POLAROIDS ★'
+              : '★ MUTABLE ECHO POP-ZINE PLAYGROUND ★ SPIN AN IDEA ★ GRAB 4 SHOT + 2 GIF PROMPTS ★ DROP ALL 8 FILES ★ PUBLISH TO PHONE ★'}
           </span>
         </div>
       </div>
@@ -1735,7 +1791,7 @@ export default function App() {
                         <div className="p-4 flex-1 flex flex-col justify-between gap-3">
                           <div>
                             <div className="font-mono-zine text-[10px] font-bold uppercase theme-muted">
-                              📍 {slate.nodeTag.replace('NODE: ', '')} • {plateCount} SHOTS
+                              📍 {slate.nodeTag.replace('NODE: ', '')} • {plateCount} SHOTS • 2 GIFS
                             </div>
                             <h3 className="font-display text-2xl font-extrabold uppercase leading-tight mt-1">
                               {slate.title}
@@ -1880,19 +1936,19 @@ export default function App() {
                   {[
                     {
                       num: 1 as WizardStep,
-                      label: '① Spin & Story',
+                      label: '① Spin & Long Story',
                       bg: activeUiTheme.accent1,
                       text: activeUiTheme.accent1Ink,
                     },
                     {
                       num: 2 as WizardStep,
-                      label: '② 4-Shot Storyboard + Media',
+                      label: '② 4 Shots + 2 GIFs + Media',
                       bg: activeUiTheme.accent2,
                       text: activeUiTheme.accent2Ink,
                     },
                     {
                       num: 3 as WizardStep,
-                      label: '③ Drop 7 Files & Launch',
+                      label: '③ Drop 8 Files & Launch',
                       bg: activeUiTheme.accent4,
                       text: activeUiTheme.accent4Ink,
                     },
@@ -2532,13 +2588,13 @@ export default function App() {
                           🕹️ Motion &amp; Music Cartridges
                         </span>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                          {/* 16:9 Cinema Video */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                          {/* 16:9 Lead Cinema Video */}
                           <div className="pop-card theme-tile-3 p-4 flex flex-col justify-between gap-3">
                             <div>
                               <div className="flex items-center justify-between">
                                 <span className="font-display text-lg font-extrabold uppercase">
-                                  🎬 16:9 Cinema Video
+                                  🎬 16:9 Lead Video
                                 </span>
                                 {copiedHistory.includes('video') && (
                                   <span
@@ -2553,7 +2609,8 @@ export default function App() {
                                 )}
                               </div>
                               <p className="text-xs font-semibold theme-muted mt-1">
-                                1080p Hero Stream • Use <strong>Quality Mode</strong> in Google Flow
+                                Leads right at the top of your zine • Use{' '}
+                                <strong>Quality Mode</strong>
                               </p>
                             </div>
 
@@ -2584,7 +2641,7 @@ export default function App() {
                                 </>
                               ) : (
                                 <>
-                                  <Copy className="w-3.5 h-3.5" /> Copy 1080p
+                                  <Copy className="w-3.5 h-3.5" /> Copy Lead
                                   Video Prompt
                                 </>
                               )}
@@ -2597,14 +2654,14 @@ export default function App() {
                             )}
                           </div>
 
-                          {/* 9:16 Vertical Loop */}
+                          {/* Story GIF #1 (Act I Loop) */}
                           <div className="pop-card theme-tile-2 p-4 flex flex-col justify-between gap-3">
                             <div>
                               <div className="flex items-center justify-between">
                                 <span className="font-display text-lg font-extrabold uppercase">
-                                  📱 9:16 Vertical Loop
+                                  🎞️ Story GIF #1
                                 </span>
-                                {copiedHistory.includes('gif') && (
+                                {copiedHistory.includes('gif1') && (
                                   <span
                                     style={{
                                       backgroundColor: activeUiTheme.marqueeBg,
@@ -2617,7 +2674,7 @@ export default function App() {
                                 )}
                               </div>
                               <p className="text-xs font-semibold theme-muted mt-1">
-                                Tilted collector loop (.GIF or vertical 9:16 .MP4 both work!)
+                                Act I tension &amp; arrival loop woven down into the story
                               </p>
                             </div>
 
@@ -2625,31 +2682,31 @@ export default function App() {
                               type="button"
                               onClick={() =>
                                 handleCopyPrompt(
-                                  'gif',
+                                  'gif1',
                                   compiledPrompts.gifPrompt
                                 )
                               }
                               style={{
                                 backgroundColor:
-                                  copiedKey === 'gif'
+                                  copiedKey === 'gif1'
                                     ? activeUiTheme.accent4
                                     : activeUiTheme.accent2,
                                 color:
-                                  copiedKey === 'gif'
+                                  copiedKey === 'gif1'
                                     ? activeUiTheme.accent4Ink
                                     : activeUiTheme.accent2Ink,
                               }}
                               className="pop-btn w-full py-2.5 px-4 font-display font-extrabold text-xs uppercase flex items-center justify-center gap-1.5 cursor-pointer"
                             >
-                              {copiedKey === 'gif' ? (
+                              {copiedKey === 'gif1' ? (
                                 <>
                                   <Check className="w-4 h-4 stroke-[3]" />{' '}
-                                  Copied 9:16 Prompt!
+                                  Copied GIF #1!
                                 </>
                               ) : (
                                 <>
-                                  <Copy className="w-3.5 h-3.5" /> Copy 9:16
-                                  Loop Prompt
+                                  <Copy className="w-3.5 h-3.5" /> Copy Story
+                                  GIF #1
                                 </>
                               )}
                             </button>
@@ -2657,6 +2714,70 @@ export default function App() {
                             {showPromptPreview && (
                               <div className="text-[11px] font-mono-zine theme-input p-2.5 rounded-xl border-2 theme-border max-h-32 overflow-y-auto">
                                 {compiledPrompts.gifPrompt}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Story GIF #2 (Act III Loop) */}
+                          <div className="pop-card theme-tile-1 p-4 flex flex-col justify-between gap-3">
+                            <div>
+                              <div className="flex items-center justify-between">
+                                <span className="font-display text-lg font-extrabold uppercase">
+                                  🎞️ Story GIF #2
+                                </span>
+                                {copiedHistory.includes('gif2') && (
+                                  <span
+                                    style={{
+                                      backgroundColor: activeUiTheme.marqueeBg,
+                                      color: activeUiTheme.accent4,
+                                    }}
+                                    className="px-2 py-0.5 rounded-full font-mono-zine text-[10px] font-bold"
+                                  >
+                                    ★ DONE
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs font-semibold theme-muted mt-1">
+                                Act III aftermath &amp; departure loop woven down into the story
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleCopyPrompt(
+                                  'gif2',
+                                  compiledPrompts.gifPrompt2
+                                )
+                              }
+                              style={{
+                                backgroundColor:
+                                  copiedKey === 'gif2'
+                                    ? activeUiTheme.accent4
+                                    : activeUiTheme.accent1,
+                                color:
+                                  copiedKey === 'gif2'
+                                    ? activeUiTheme.accent4Ink
+                                    : activeUiTheme.accent1Ink,
+                              }}
+                              className="pop-btn w-full py-2.5 px-4 font-display font-extrabold text-xs uppercase flex items-center justify-center gap-1.5 cursor-pointer"
+                            >
+                              {copiedKey === 'gif2' ? (
+                                <>
+                                  <Check className="w-4 h-4 stroke-[3]" />{' '}
+                                  Copied GIF #2!
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5" /> Copy Story
+                                  GIF #2
+                                </>
+                              )}
+                            </button>
+
+                            {showPromptPreview && (
+                              <div className="text-[11px] font-mono-zine theme-input p-2.5 rounded-xl border-2 theme-border max-h-32 overflow-y-auto">
+                                {compiledPrompts.gifPrompt2}
                               </div>
                             )}
                           </div>
@@ -2681,7 +2802,7 @@ export default function App() {
                                 )}
                               </div>
                               <p className="text-xs font-semibold theme-muted mt-1">
-                                Powers the Spinning Vinyl Boombox &amp; candy visualizer
+                                Powers the Spinning Vinyl Boombox under your lead video
                               </p>
                             </div>
 
@@ -2741,22 +2862,22 @@ export default function App() {
                           }}
                           className="pop-btn px-7 py-3.5 font-display font-extrabold text-sm sm:text-base uppercase flex items-center gap-2 cursor-pointer"
                         >
-                          Next: Drop All 7 Files &amp; Launch{' '}
+                          Next: Drop All 8 Files &amp; Launch{' '}
                           <ArrowRight className="w-5 h-5 stroke-[2.5]" />
                         </button>
                       </div>
                     </div>
                   )}
 
-                  {/* ---------------- STEP 3: DROP ALL 7 FILES & LAUNCH STANDALONE ZINE ---------------- */}
+                  {/* ---------------- STEP 3: DROP ALL 8 FILES & LAUNCH STANDALONE ZINE ---------------- */}
                   {wizardStep === 3 && (
                     <div className="pop-card theme-middle p-6 sm:p-7 space-y-6">
                       <div>
                         <h2 className="font-display text-2xl sm:text-3xl font-extrabold uppercase">
-                          ③ Drop All 7 Files &amp; Launch Your Zine!
+                          ③ Drop All 8 Files &amp; Launch Your Zine!
                         </h2>
                         <p className="text-sm font-medium theme-muted mt-0.5">
-                          Drag all 7 files in one swipe — OR click any individual Polaroid frame below to swap a single shot!
+                          Drag all 8 files in one swipe (16:9 Lead Video + 4× 2K Shots + 2× Story GIFs + Song) — OR swap any slot individually below!
                         </p>
                       </div>
 
@@ -2783,31 +2904,20 @@ export default function App() {
                             />
                             <Upload className="w-8 h-8 mx-auto mb-2 stroke-[2.5]" />
                             <div className="font-display text-lg font-extrabold uppercase">
-                              🎪 Drop All 7 Files Here at Once!
+                              🎪 Drop All 8 Files Here at Once!
                             </div>
                             <div className="text-xs font-bold theme-muted mt-1">
-                              4x 2K Shots (.jpg/.png) + 9:16 Loop (.gif/.mp4) + 16:9 Cinema (.mp4) + Song (.mp3)
+                              16:9 Lead Video (.mp4) + 4× 2K Shots (.jpg/.png) + 2× Story GIFs (.gif) + Song (.mp3)
                             </div>
                           </label>
 
-                          {/* 4 Individual Storyboard Polaroid Swap Slots */}
+                          {/* 4 Individual Storyboard Polaroid Swap Slots + 2 Story GIF Swaps */}
                           <div className="pop-card theme-tile-4 p-4 space-y-3">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <span className="font-mono-zine text-xs font-bold uppercase">
-                                📸 Click Any Shot to Swap Individually:
+                                📸 Swap Individual Media Slots:
                               </span>
-                              <div className="flex gap-2">
-                                <label className="px-2.5 py-1 rounded-lg border-2 theme-border theme-tile-2 font-mono-zine text-[10px] font-bold uppercase cursor-pointer">
-                                  <input
-                                    type="file"
-                                    accept="image/gif,video/mp4,video/webm"
-                                    onChange={(e) =>
-                                      handleFilesSelected(e.target.files, 'gif')
-                                    }
-                                    className="hidden"
-                                  />
-                                  📱 Swap 9:16
-                                </label>
+                              <div className="flex flex-wrap gap-1.5">
                                 <label className="px-2.5 py-1 rounded-lg border-2 theme-border theme-tile-3 font-mono-zine text-[10px] font-bold uppercase cursor-pointer">
                                   <input
                                     type="file"
@@ -2820,9 +2930,37 @@ export default function App() {
                                     }
                                     className="hidden"
                                   />
-                                  🎬 Swap 16:9
+                                  🎬 Lead Video
+                                </label>
+                                <label className="px-2.5 py-1 rounded-lg border-2 theme-border theme-tile-2 font-mono-zine text-[10px] font-bold uppercase cursor-pointer">
+                                  <input
+                                    type="file"
+                                    accept="image/gif,video/mp4,video/webm"
+                                    onChange={(e) =>
+                                      handleFilesSelected(
+                                        e.target.files,
+                                        'gif1'
+                                      )
+                                    }
+                                    className="hidden"
+                                  />
+                                  🎞️ Swap GIF #1
                                 </label>
                                 <label className="px-2.5 py-1 rounded-lg border-2 theme-border theme-tile-1 font-mono-zine text-[10px] font-bold uppercase cursor-pointer">
+                                  <input
+                                    type="file"
+                                    accept="image/gif,video/mp4,video/webm"
+                                    onChange={(e) =>
+                                      handleFilesSelected(
+                                        e.target.files,
+                                        'gif2'
+                                      )
+                                    }
+                                    className="hidden"
+                                  />
+                                  🎞️ Swap GIF #2
+                                </label>
+                                <label className="px-2.5 py-1 rounded-lg border-2 theme-border theme-surface font-mono-zine text-[10px] font-bold uppercase cursor-pointer">
                                   <input
                                     type="file"
                                     accept="audio/*,.mp3,.m4a,.wav"
@@ -3150,7 +3288,7 @@ export default function App() {
                           {slate.title}
                         </div>
                         <div className="font-mono-zine text-[10px] font-bold theme-muted mt-1">
-                          {plateCount} SHOTS • 9:16 • 1080P • SONG
+                          {plateCount} SHOTS • 2 GIFS • 1080P • SONG
                         </div>
                       </div>
                     </div>

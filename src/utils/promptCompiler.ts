@@ -15,6 +15,7 @@ export interface AutoCompiledPrompts {
   stillPrompts: StillPlatePrompt[]
   videoPrompt: string
   gifPrompt: string
+  gifPrompt2: string
   audioPrompt: string
 }
 
@@ -79,16 +80,16 @@ STYLE & TONE RULES:
 2. SPECIFIC PHYSICAL ACTION (NO SWORD SLICING): Center Act II strictly on the specific rolled action ("${slate.action}"). Do NOT use glowing swords, blades, or golden ropes/tethers. Keep the intervention grounded in physical tools, machinery, environmental mechanics, or quiet unyielding presence.
 3. SILENT DEPARTURE: The masked, faceless operative never speaks and never removes the visor, departing quietly once the mechanical or atmospheric state shifts into stillness.
 
-Write a 3-Act narrative using these exact XML tags:
+Write an expanded, magazine-length 3-Act narrative (target 750–1,100 words total) using these exact XML tags:
 <title>Short Evocative 3-to-6 Word Episode Headline</title>
 <scene_setup>
-Act I (The Setup): Establish the physical environment of ${slate.environmentBiome} within ${slate.biome} under ${slate.lightingStyle}, observing ${slate.encounterTarget} from the perspective of ${slate.perspective}. Write 2 rich tactile paragraphs.
+Act I (The Setup — 3 Rich Paragraphs): Establish the vast physical architecture and sensory atmosphere of ${slate.environmentBiome} within ${slate.biome} under ${slate.lightingStyle}. Observe ${slate.encounterTarget} closely from the perspective of ${slate.perspective}, detailing the failing machinery, environmental pressure, acoustic rattle, and lived-in exhaustion of the space before anyone arrives. Write 3 full, immersive paragraphs separated by blank lines.
 </scene_setup>
 <intervention>
-Act II (The Action): The faceless operative (${slate.attire}) is framed in ${slate.cameraAngle} and executes the physical action: "${slate.action}". Focus on the tactile mechanical details and sensory shift between the operative and ${slate.encounterTarget}. Write 2 rich vivid paragraphs.
+Act II (The Intervention — 3 Rich Paragraphs): The faceless operative (${slate.attire}) emerges silently in ${slate.cameraAngle} and executes the physical action: "${slate.action}". Dwell on the step-by-step mechanical leverage, tool contact, resistant iron, venting steam, and unspoken tension between the operative and ${slate.encounterTarget} until the bottleneck yields. Write 3 full, vivid paragraphs separated by blank lines.
 </intervention>
 <aftermath>
-Act III (The Aftermath): The local system or environment settles into quiet, altered stillness. The operative departs into the shadows or mist without speaking. Write 1–2 atmospheric paragraphs.
+Act III (The Aftermath — 2 to 3 Rich Paragraphs): Detail the immediate physical and acoustic release as the system settles into quiet, altered equilibrium. Capture ${slate.encounterTarget}'s reaction to the sudden stillness as the masked operative departs into the shadows or mist without speaking a word. Write 2–3 atmospheric paragraphs separated by blank lines.
 </aftermath>`
 
   // Clean visual variables with ZERO "ME!", ZERO numbers, ZERO all-caps tokens
@@ -159,8 +160,11 @@ Act III (The Aftermath): The local system or environment settles into quiet, alt
   // 3. High-Quality Cinematic 1080p Video Prompt (Driven by the rolled action & camera movement — zero blades/tethers)
   const videoPrompt = `Generate a high-quality 1080p cinematic video using the highest quality video model (do not use fast low-credit mode; render in full high-quality cinema mode, 16:9 widescreen). High-budget theatrical cyber-noir anime cinematography in the style of Ghost in the Shell with rich volumetric atmosphere and fluid physical motion. Smooth cinematic camera movement (${cleanCamera}) through a ${cleanEnv} set inside a ${cleanBiome} under ${cleanLighting}. Thick atmospheric mist, drifting dust and condensation, and weathered industrial surfaces. A mysterious, completely faceless operative wearing a smooth, featureless black obsidian full-face dome visor and ${cleanAttire} is ${cleanAction} while ${cleanTarget} is visible in the surrounding space. Realistic mechanical interaction, subtle environmental motion, heavy chiaroscuro shadows, authentic film grain, completely clean cinematic frame with no text, no words, no letters, no badges, and no overlays.`
 
-  // 4. 9:16 Portrait GIF Loop Prompt (Strictly positive GIF instructions — never mention the word "video", zero blades/tethers)
-  const gifPrompt = `Generate an animated GIF in 9:16 vertical portrait aspect ratio (short seamless looping animated GIF file, portrait orientation). Dark cyber-noir cel-shaded anime style inside a ${cleanEnv} under ${cleanLighting}. Vertical portrait framing of a mysterious, completely faceless operative wearing a smooth, featureless black obsidian full-face dome visor and ${cleanAttire}, ${cleanAction}. Seamless looping environmental motion with drifting steam, condensation drips, and atmospheric mist across weathered industrial metal. Deep ink shadows, zero text, no words, no letters, and no labels.`
+  // 4A. Story GIF #1 Prompt (Act I–II Atmosphere & Arrival Loop — placed down inside the story)
+  const gifPrompt = `Generate a seamless looping animated GIF in 16:9 widescreen cinematic framing. Dark cyber-noir cel-shaded anime style inside a ${cleanEnv} within a ${cleanBiome} under ${cleanLighting}. Act I–II story loop: ${cleanTarget} working amid trembling industrial machinery, flickering gauges, and heavy condensation while the mysterious, completely faceless operative in a smooth featureless black obsidian dome visor and ${cleanAttire} steps quietly through drifting steam to begin ${cleanAction}. Seamless looping environmental motion with dripping oil, rising vapor, and deep ink shadows. Zero text, no words, no letters, and no labels.`
+
+  // 4B. Story GIF #2 Prompt (Act II–III Mechanical Release & Aftermath Loop — placed down inside the story)
+  const gifPrompt2 = `Generate a seamless looping animated GIF in 16:9 widescreen cinematic framing. Dark cyber-noir cel-shaded anime style inside a ${cleanEnv} under soft stabilized ${cleanLighting}. Contemplative Act III aftermath loop following ${cleanAction}: warm steam gently venting from newly stabilized iron valves, mirror-still water reflections rippling softly across the floor, and the solitary rear silhouette of the faceless operative in ${cleanAttire} drifting slowly away into glowing atmospheric shadows. Seamless cinemagraph-style looping motion, deep chiaroscuro ink shadows, zero text, no words, no letters, and no labels.`
 
   // 5. 30-Second to 1-Minute Cyber-Noir Song Prompt (for Google Flow Music)
   const bpm = 82 + ((slate.phaseIndex * 7) % 28)
@@ -172,6 +176,7 @@ Act III (The Aftermath): The local system or environment settles into quiet, alt
     stillPrompts,
     videoPrompt,
     gifPrompt,
+    gifPrompt2,
     audioPrompt,
   }
 }
@@ -243,11 +248,14 @@ export function parsePastedStoryToActs(
   }
 
   if (proseParagraphs.length >= 3) {
+    const n = proseParagraphs.length
+    const cut1 = Math.max(1, Math.ceil(n / 3))
+    const cut2 = Math.max(cut1 + 1, Math.ceil((n * 2) / 3))
     return {
       title: detectedTitle,
-      sceneSetup: proseParagraphs[0],
-      intervention: proseParagraphs[1],
-      aftermath: proseParagraphs.slice(2).join('\n\n'),
+      sceneSetup: proseParagraphs.slice(0, cut1).join('\n\n'),
+      intervention: proseParagraphs.slice(cut1, cut2).join('\n\n'),
+      aftermath: proseParagraphs.slice(cut2).join('\n\n'),
     }
   } else if (proseParagraphs.length === 2) {
     return {

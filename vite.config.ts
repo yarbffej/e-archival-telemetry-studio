@@ -43,7 +43,7 @@ function gdriveArchiveSyncPlugin() {
 
           let docItem: any = null
           const imageItems: any[] = []
-          let gifItem: any = null
+          const gifItems: any[] = []
           let videoItem: any = null
           let audioItem: any = null
 
@@ -56,7 +56,7 @@ function gdriveArchiveSyncPlugin() {
             ) {
               docItem = item
             } else if (mime.includes('gif') || name.endsWith('.gif')) {
-              if (!gifItem) gifItem = item
+              gifItems.push(item)
             } else if (
               mime.includes('image/') ||
               name.endsWith('.jpg') ||
@@ -137,19 +137,37 @@ function gdriveArchiveSyncPlugin() {
             result.stillCount = galleryUrls.length
           }
 
-          if (gifItem?.id) {
-            const gifOutPath = path.join(syncDir, `${folderId}.gif`)
-            if (!fs.existsSync(gifOutPath)) {
-              await execFileAsync('gdrive', [
-                'readonly',
-                'download',
-                gifItem.id,
-                '--out',
-                gifOutPath,
-              ])
+          if (gifItems.length > 0) {
+            const g1 = gifItems[0]
+            if (g1?.id) {
+              const gif1Out = path.join(syncDir, `${folderId}_gif1.gif`)
+              if (!fs.existsSync(gif1Out)) {
+                await execFileAsync('gdrive', [
+                  'readonly',
+                  'download',
+                  g1.id,
+                  '--out',
+                  gif1Out,
+                ])
+              }
+              result.gifUrl = `./media/synced/${folderId}_gif1.gif`
+              result.gifName = g1.name
             }
-            result.gifUrl = `./media/synced/${folderId}.gif`
-            result.gifName = gifItem.name
+            const g2 = gifItems[1]
+            if (g2?.id) {
+              const gif2Out = path.join(syncDir, `${folderId}_gif2.gif`)
+              if (!fs.existsSync(gif2Out)) {
+                await execFileAsync('gdrive', [
+                  'readonly',
+                  'download',
+                  g2.id,
+                  '--out',
+                  gif2Out,
+                ])
+              }
+              result.gifUrl2 = `./media/synced/${folderId}_gif2.gif`
+              result.gif2Name = g2.name
+            }
           }
 
           if (videoItem?.id) {
@@ -724,7 +742,8 @@ function gdriveArchiveSyncPlugin() {
               ...slate,
               stillUrl: gallery && gallery.length > 0 ? gallery[0] : still,
               galleryUrls: gallery,
-              gifUrl: promoteUrl(slate?.gifUrl, sid, 'loop'),
+              gifUrl: promoteUrl(slate?.gifUrl, sid, 'loop1'),
+              gifUrl2: promoteUrl(slate?.gifUrl2, sid, 'loop2'),
               videoUrl: promoteUrl(slate?.videoUrl, sid, 'cinema'),
               audioUrl: promoteUrl(slate?.audioUrl, sid, 'song'),
             }
